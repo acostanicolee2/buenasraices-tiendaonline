@@ -1,0 +1,274 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buenasraíces · Tienda Orgánica</title>
+  <style>
+    :root{--ink:#244031;--cream:#f8f2e4;--paper:#fffdf8;--leaf:#356c47;--lime:#dcecab;--line:#ded5c2;--muted:#6f776c;--shadow:0 12px 35px #24403114}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:1180px;margin:auto;padding:0 24px}.hero{padding:50px 0 44px;background:#e9dfc8;border-bottom:1px solid var(--line)}nav{display:flex;align-items:center;justify-content:space-between}.brand{font-family:Georgia,serif;font-size:25px;font-weight:bold;letter-spacing:-1px}.brand i{font-style:normal;color:var(--leaf)}.badge{border:1px solid #9fb982;color:var(--leaf);padding:7px 11px;border-radius:999px;font-size:13px}.hero-grid{display:grid;grid-template-columns:1.45fr .8fr;gap:45px;align-items:end;margin-top:50px}.eyebrow{color:var(--leaf);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-size:12px}.hero h1{font-family:Georgia,serif;font-weight:400;font-size:clamp(42px,6vw,72px);line-height:.98;margin:12px 0 16px;letter-spacing:-3px}.hero p{font-size:18px;max-width:550px;line-height:1.5;color:#536457}.delivery-card{padding:24px;background:#315d42;color:#fff;border-radius:22px;box-shadow:var(--shadow)}.delivery-card b{font-size:18px}.delivery-card p{font-size:14px;color:#e7f0df;margin:8px 0 0}.section{padding:44px 0}.section-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:20px}.section h2{font-family:Georgia,serif;font-size:34px;font-weight:400;margin:0}.section-head span{color:var(--muted);font-size:14px}.grid{display:grid;grid-template-columns:1.4fr .8fr;gap:28px;align-items:start}.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.product{background:var(--paper);border:1px solid var(--line);padding:17px;border-radius:16px;transition:.2s}.product:focus-within,.product:hover{border-color:#8eb370;box-shadow:var(--shadow)}.product-top{display:flex;gap:12px;align-items:flex-start}.emoji,.product-photo{width:46px;height:46px;border-radius:10px;flex:0 0 46px}.emoji{font-size:28px;line-height:46px;text-align:center;background:#f3eddc}.product-photo{object-fit:cover}.product h3{font-size:16px;margin:1px 0 3px}.price{font-size:13px;color:var(--muted)}.product-controls{display:flex;gap:8px;margin-top:15px}.product select,.product input{border:1px solid var(--line);background:#fff;padding:10px;border-radius:9px;font:inherit;color:var(--ink)}.product select{width:92px}.product input{width:100%;min-width:0}.summary{background:#264e36;color:#fff;border-radius:18px;padding:23px;position:sticky;top:18px}.summary h2{font-size:25px}.summary .empty{color:#d6e1d2;line-height:1.5}.line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #ffffff22;font-size:14px}.line small{display:block;color:#d6e1d2;margin-top:2px}.total{display:flex;justify-content:space-between;align-items:end;padding:19px 0 3px}.total span{color:#d6e1d2}.total b{font-size:28px}.btn{border:0;border-radius:10px;background:var(--lime);color:#284334;width:100%;padding:13px 15px;margin-top:15px;font-weight:800;font-size:15px;cursor:pointer}.btn:hover{filter:brightness(.96)}.form-box{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:25px;box-shadow:var(--shadow)}.form-box h2{font-family:Georgia,serif;font-weight:400;font-size:28px;margin:0 0 4px}.hint{color:var(--muted);font-size:14px;margin:0 0 19px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}label{font-size:13px;font-weight:700}input,textarea,select{font:inherit;border:1px solid var(--line);border-radius:9px;padding:11px;background:#fff;color:var(--ink)}textarea{resize:vertical;min-height:72px}.notice{display:none;margin-top:16px;padding:13px;border-radius:10px;background:#edf5df;color:#385a35;line-height:1.4}@media(max-width:800px){.hero-grid,.grid{grid-template-columns:1fr}.products{grid-template-columns:1fr}.delivery-card{display:none}.summary{position:static}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.hero{padding-top:25px}}
+
+    /* Estilos del Botón Flotante de WhatsApp */
+    .whatsapp-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      background-color: #25d366;
+      color: #fff;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 999;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+    }
+    .whatsapp-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .whatsapp-btn svg {
+      width: 34px;
+      height: 34px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <nav>
+        <div class="brand">Buenas<i>raíces</i></div>
+        <div class="badge">Tienda orgánica · de estación</div>
+      </nav>
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Pedidos semanales</div>
+          <h1>De nuestra huerta a tu mesa.</h1>
+          <p>Elegí cuánto necesitás de cada producto. Pesamos tu pedido con precisión y te confirmamos el total final.</p>
+        </div>
+        <div class="delivery-card">
+          <b>🌿 ¿Cómo funciona?</b>
+          <p>Pedís por peso, dejamos todo listo y ajustamos el importe únicamente si el peso real cambia.</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section wrap">
+      <div class="section-head">
+        <h2>Elegí tus productos</h2>
+        <span>Precios por kilo · mínimo 100 g</span>
+      </div>
+      <div class="grid">
+        <div id="products" class="products"></div>
+        <aside class="summary">
+          <h2>Tu pedido</h2>
+          <div id="cart" class="empty">Todavía no agregaste productos.</div>
+          <div class="total">
+            <span>Total estimado</span>
+            <b id="total">$0</b>
+          </div>
+          <button class="btn" onclick="document.getElementById('datos').scrollIntoView({behavior:'smooth'})">Continuar con mis datos</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="datos" class="section wrap">
+      <div class="form-box">
+        <h2>¿A dónde lo llevamos?</h2>
+        <p class="hint">Estos datos nos ayudan a organizar la entrega y confirmar tu pedido.</p>
+        <form id="checkout">
+          <div class="form-grid">
+            <div class="field">
+              <label for="name">Nombre y apellido</label>
+              <input id="name" required placeholder="Ej. Ana Pérez">
+            </div>
+            <div class="field">
+              <label for="phone">WhatsApp</label>
+              <input id="phone" required placeholder="Ej. 11 1234 5678">
+            </div>
+            <div class="field full">
+              <label for="address">Dirección</label>
+              <input id="address" required placeholder="Calle y número / departamento">
+            </div>
+            <div class="field">
+              <label for="streets">Entre calles</label>
+              <input id="streets" required placeholder="Ej. Lavalle y Maipú">
+            </div>
+            <div class="field">
+              <label for="zone">Zona de entrega</label>
+              <select id="zone" required>
+                <option value="">Elegí tu zona</option>
+                <option>Norte</option>
+                <option>Sur</option>
+                <option>Oeste</option>
+                <option>CABA</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="notes">Notas para la entrega (opcional)</label>
+              <textarea id="notes" placeholder="Timbre, horarios, indicaciones…"></textarea>
+            </div>
+          </div>
+          <button class="btn" type="submit">Enviar pedido</button>
+        </form>
+        <div id="notice" class="notice"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Botón Flotante de WhatsApp -->
+  <a href="https://wa.me/5491151384479?text=Hola!%20Tengo%20una%20consulta%20sobre%20la%20tienda." 
+     class="whatsapp-btn" 
+     target="_blank" 
+     rel="noopener noreferrer" 
+     aria-label="Contactar por WhatsApp">
+    <svg viewBox="0 0 24 24">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+    </svg>
+  </a>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    let products = [];
+    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+    const grams = (qty, unit) => unit === 'kg' ? Number(qty) * 1000 : Number(qty);
+    const saleLabel = unit => unit === 'kg' ? 'kg' : unit === 'docena' ? 'docena' : 'unidad';
+
+    function renderProducts() {
+      document.getElementById('products').innerHTML = products.map(p => {
+        let unit = p.sale_unit || 'kg',
+            selector = unit === 'kg' 
+              ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="renderCart()"><option value="kg">kg</option><option value="g">gramos</option></select>` 
+              : `<select aria-label="Unidad"><option>${saleLabel(unit)}</option></select>`;
+        return `<article class="product">
+          <div class="product-top">
+            ${p.image_url ? `<img class="product-photo" src="${p.image_url}" alt="${p.name}">` : `<span class="emoji">${p.icon}</span>`}
+            <div>
+              <h3>${p.name}</h3>
+              <div class="price">${money(p.price)} / ${saleLabel(unit)}</div>
+              <div class="price">${p.category || ''}</div>
+            </div>
+          </div>
+          <div class="product-controls">
+            <input aria-label="Cantidad de ${p.name}" type="number" min="0" step="${unit === 'kg' ? '0.1' : '1'}" placeholder="Cantidad" data-id="${p.id}" oninput="renderCart()">
+            ${selector}
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    function cartItems() {
+      return products.map(p => {
+        let input = document.querySelector(`[data-id="${p.id}"]`),
+            saleUnit = p.sale_unit || 'kg',
+            selected = saleUnit === 'kg' ? document.querySelector(`[data-unit="${p.id}"]`).value : saleUnit,
+            quantity = Number(input.value),
+            g = saleUnit === 'kg' ? grams(quantity, selected) : quantity;
+        return {
+          ...p,
+          sale_unit: saleUnit,
+          g,
+          display: input.value ? `${input.value} ${saleUnit === 'kg' ? (selected === 'kg' ? 'kg' : 'g') : saleLabel(saleUnit)}` : ''
+        };
+      }).filter(x => x.g > 0);
+    }
+
+    function calc(items) {
+      return items.reduce((a, x) => a + x.price * (x.sale_unit === 'kg' ? x.g / 1000 : x.g), 0);
+    }
+
+    function renderCart() {
+      let items = cartItems(), cart = document.getElementById('cart');
+      cart.className = '';
+      cart.innerHTML = items.length 
+        ? items.map(x => `<div class="line"><div>${x.name}<small>${x.display}</small></div><b>${money(x.price * (x.sale_unit === 'kg' ? x.g / 1000 : x.g))}</b></div>`).join('') 
+        : 'Todavía no agregaste productos.';
+      if (!items.length) cart.className = 'empty';
+      document.getElementById('total').textContent = money(calc(items));
+    }
+
+    const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
+
+    async function loadProducts() {
+      let { data, error } = await db.from('products').select('id,name,icon,price_per_kg,category,sale_unit,image_url').eq('active', true).order('display_order');
+      if (error) {
+        document.getElementById('products').innerHTML = '<p class="hint">No pudimos cargar el catálogo. Actualizá la página en unos segundos.</p>';
+        return;
+      }
+      products = data.map(p => ({ ...p, price: Number(p.price_per_kg) }));
+      renderProducts();
+      renderCart();
+    }
+
+    document.getElementById('checkout').addEventListener('submit', async e => {
+      e.preventDefault();
+      let items = cartItems();
+      if (!items.length) {
+        alert('Agregá al menos un producto antes de enviar el pedido.');
+        return;
+      }
+
+      let button = e.target.querySelector('button[type="submit"]'), original = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Enviando pedido…';
+
+      let orderId = crypto.randomUUID(),
+          customer = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            streets: document.getElementById('streets').value,
+            zone: document.getElementById('zone').value,
+            notes: document.getElementById('notes').value
+          };
+
+      let { error } = await db.from('orders').insert({
+        id: orderId,
+        customer_name: customer.name,
+        phone: customer.phone,
+        address: customer.address,
+        streets: customer.streets,
+        zone: customer.zone,
+        notes: customer.notes
+      });
+
+      if (!error) {
+        ({ error } = await db.from('order_items').insert(items.map(i => ({
+          order_id: orderId,
+          product_id: i.id,
+          product_name: i.name,
+          price_per_kg: i.price,
+          grams: i.g,
+          sale_unit: i.sale_unit
+        }))));
+      }
+
+      button.disabled = false;
+      button.textContent = original;
+
+      if (error) {
+        alert(`No pudimos enviar el pedido. Motivo: ${error.message} (${error.code || 'sin código'})`);
+        return;
+      }
+
+      let notice = document.getElementById('notice');
+      notice.style.display = 'block';
+      notice.innerHTML = `<b>¡Gracias, ${customer.name.split(' ')[0]}!</b> Recibimos tu pedido estimado en <b>${money(calc(items))}</b>. Te escribiremos por WhatsApp para confirmar disponibilidad y total final.`;
+      
+      e.target.reset();
+      document.querySelectorAll('[data-id]').forEach(x => x.value = '');
+      renderCart();
+      notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    loadProducts();
+  </script>
+</body>
+</html>

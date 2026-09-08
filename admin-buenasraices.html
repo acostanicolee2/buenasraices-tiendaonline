@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Buenasraíces · Administración</title>
+  <style>
+    :root{--ink:#244031;--paper:#fffdf8;--bg:#f8f2e4;--leaf:#356c47;--line:#ded5c2}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif}
+    .wrap{max-width:980px;margin:auto;padding:35px 22px}
+    header{border-bottom:1px solid var(--line);background:#e9dfc8}
+    h1,h2,h3{font-family:Georgia,serif}
+    h1{margin:0;font-size:34px}
+    h1 i{color:var(--leaf);font-style:normal}
+    .sub,.muted{color:#687568;font-size:14px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+    .btn{border:0;border-radius:9px;background:var(--leaf);padding:11px 14px;color:#fff;font-weight:700;cursor:pointer}
+    .btn.light{background:#dcecab;color:#284334}
+    .btn.sm{padding:6px 10px;font-size:12px;margin-top:8px}
+    .group{background:#faf7ee;border:1px solid var(--line);border-left:5px solid #88ad67;border-radius:11px;padding:17px;margin:13px 0}
+    .group h2{margin:0 0 7px;font-size:22px}
+    .route{margin:10px 0 0;padding:0;list-style:none}
+    .route li{padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+    .route li:first-child{border-top:0}
+    .order,.login{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:17px;margin:13px 0}
+    .login{max-width:440px;margin:45px auto}
+    .login input,.catalog-form input,.catalog-row input,.catalog-form select,.catalog-row select{border:1px solid var(--line);padding:9px;border-radius:8px;font:inherit}
+    .login input{width:100%;margin:5px 0 14px}
+    .catalog-form{display:grid;grid-template-columns:80px 1fr 130px 110px 100px auto;gap:8px;margin:13px 0}
+    .catalog-row{display:grid;grid-template-columns:70px 1fr 130px 110px 100px auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+    .catalog-row:first-child{border-top:0}
+    .order h3{margin:0;font-size:19px}
+    .items{margin:13px 0}
+    .item{display:grid;grid-template-columns:1fr 110px 110px;gap:8px;align-items:center;margin:8px 0}
+    .item input{border:1px solid var(--line);padding:8px;border-radius:7px;font:inherit}
+    .total{font-weight:800;margin-top:12px}
+    .remove{border:0;background:transparent;color:#a34a38;cursor:pointer;margin-left:12px}
+    .empty,.message{color:#687568;background:#fffdf8;padding:18px;border-radius:10px}
+    .message.error{color:#943b30;background:#f8e3dd}
+    .zone-actions{display:flex;gap:8px;margin-top:10px}
+    @media(max-width:620px){
+      .item{grid-template-columns:1fr 85px 85px}
+      .catalog-form{grid-template-columns:1fr 1fr}
+      .catalog-form .btn{grid-column:1/-1}
+      .catalog-row{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Buenas<i>raíces</i> · Administración</h1>
+      <p class="sub">Pedidos y hoja de reparto. Acceso exclusivo para administradoras.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="login" class="login">
+      <h2>Ingresar</h2>
+      <p class="sub">Usá el email y contraseña de la administradora.</p>
+      <form id="loginForm">
+        <label>Email</label>
+        <input id="email" type="email" required autocomplete="email">
+        <label>Contraseña</label>
+        <input id="password" type="password" required autocomplete="current-password">
+        <button class="btn" type="submit">Entrar al panel</button>
+      </form>
+      <p id="loginMessage" class="message" hidden></p>
+    </section>
+
+    <section id="panel" hidden>
+      <div class="actions">
+        <button class="btn" onclick="imprimirGeneralReparto()">🚚 Reparto General (Todas las zonas)</button>
+        <button class="btn light" onclick="imprimirGeneralPedidos()">📦 Lista de Pedidos (Todas las zonas)</button>
+        <button class="btn light" style="background:#e88" onclick="logout()">Cerrar sesión</button>
+      </div>
+
+      <section class="order">
+        <h2>Catálogo de productos</h2>
+        <p class="sub">Agregá cualquier rubro: carnes, pollos, huevos, conservas, congelados, tierra o plantines.</p>
+        <form id="catalogForm" class="catalog-form">
+          <input id="newIcon" placeholder="🌿" maxlength="4" aria-label="Ícono">
+          <input id="newName" placeholder="Nombre del producto" required>
+          <input id="newCategory" placeholder="Categoría (ej. Carnes)" required>
+          <select id="newUnit" aria-label="Forma de venta">
+            <option value="kg">Por kilo</option>
+            <option value="unidad">Por unidad</option>
+            <option value="docena">Por docena</option>
+          </select>
+          <input id="newPrice" type="number" min="0" step="1" placeholder="Precio" required>
+          <button class="btn" type="submit">Agregar</button>
+        </form>
+        <div id="catalog"></div>
+      </section>
+
+      <h2>Reparto por zona</h2>
+      <div id="zones"></div>
+
+      <h2>Pedidos completos</h2>
+      <div id="orders"></div>
+    </section>
+  </main>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
+  let ordersState = [], productsState = [];
+
+  const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+  
+  const total = o => (o.order_items || [])
+    .filter(i => !i.out_of_stock)
+    .reduce((s, i) => s + Number(i.price_per_kg) * (i.sale_unit === 'kg' ? Number(i.grams) / 1000 : Number(i.grams)), 0);
+
+  const formatQuantity = i => {
+    if (i.sale_unit === 'kg') {
+      return i.grams >= 1000 ? `${(i.grams / 1000).toFixed(2)} kg` : `${i.grams} g`;
+    }
+    return `${i.grams} ${i.sale_unit === 'docena' ? 'docena(s)' : 'unidad(es)'}`;
+  };
+
+  async function load() {
+    let [{ data: orders, error }, { data: products, error: productsError }] = await Promise.all([
+      db.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
+      db.from('products').select('*').order('display_order').order('name')
+    ]);
+
+    if (error) {
+      document.querySelector('#orders').innerHTML = '<p class="message error">No tenés permiso para ver los pedidos. Verificá que tu UID haya sido agregado como administradora.</p>';
+      return;
+    }
+    ordersState = orders || [];
+    productsState = productsError ? [] : (products || []);
+    render();
+  }
+
+  function render() {
+    let groups = ordersState.reduce((a, o) => { (a[o.zone] ??= []).push(o); return a; }, {}),
+        zoneBox = document.querySelector('#zones'),
+        orderBox = document.querySelector('#orders'),
+        catalogBox = document.querySelector('#catalog');
+
+    catalogBox.innerHTML = productsState.length 
+      ? productsState.map(p => `
+        <div class="catalog-row">
+          <input value="${p.icon || '🌿'}" maxlength="4" aria-label="Ícono" onchange="updateProduct('${p.id}','icon',this.value)">
+          <input value="${p.name}" aria-label="Nombre" onchange="updateProduct('${p.id}','name',this.value)">
+          <input value="${p.category || 'General'}" aria-label="Categoría" onchange="updateProduct('${p.id}','category',this.value)">
+          <select aria-label="Unidad" onchange="updateProduct('${p.id}','sale_unit',this.value)">
+            <option value="kg" ${p.sale_unit === 'kg' ? 'selected' : ''}>Por kilo</option>
+            <option value="unidad" ${p.sale_unit === 'unidad' ? 'selected' : ''}>Por unidad</option>
+            <option value="docena" ${p.sale_unit === 'docena' ? 'selected' : ''}>Por docena</option>
+          </select>
+          <input type="number" min="0" step="1" value="${p.price_per_kg}" aria-label="Precio" onchange="updateProduct('${p.id}','price_per_kg',this.value)">
+          <label><input type="checkbox" ${p.active ? 'checked' : ''} onchange="updateProduct('${p.id}','active',this.checked)"> Visible</label>
+          <button class="remove" onclick="deleteProduct('${p.id}')">Eliminar</button>
+        </div>`).join('') 
+      : '<p class="empty">Todavía no hay productos. Agregá el primero arriba.</p>';
+
+    // RENDEREADO DE PEDIDOS Y REPARTOS DIVIDIDOS POR ZONA
+    zoneBox.innerHTML = ordersState.length 
+      ? Object.entries(groups).map(([z, os]) => `
+        <section class="group">
+          <h2>📍 Zona: ${z} (${os.length} ${os.length === 1 ? 'pedido' : 'pedidos'})</h2>
+          
+          <div class="zone-actions">
+            <button class="btn sm" onclick="imprimirRepartoZona('${z}')">🚚 Imprimir Reparto Zona</button>
+            <button class="btn sm light" onclick="imprimirPedidosZona('${z}')">📦 Imprimir Pedidos Zona</button>
+          </div>
+
+          <!-- Pestaña desplegable o listado directo de pedidos por zona -->
+          <div style="margin-top:15px; border-top: 1px dashed #ded5c2; padding-top: 10px;">
+            <b>Lista de pedidos para preparar en ${z}:</b>
+            ${os.map(o => `
+              <div style="background: #fff; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ded5c2;">
+                <div><b>${o.customer_name}</b> - <small>${o.address} (${o.phone})</small></div>
+                <ul style="margin: 5px 0 0; padding-left: 20px; font-size: 13px;">
+                  ${(o.order_items || []).map(i => `
+                    <li>${i.product_name}: <b>${formatQuantity(i)}</b> ${i.out_of_stock ? '<span style="color:red">(Sin Stock)</span>' : ''}</li>
+                  `).join('')}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+        </section>`).join('') 
+      : '<p class="empty">Todavía no hay pedidos cargados.</p>';
+
+    orderBox.innerHTML = ordersState.length 
+      ? ordersState.map(o => `
+        <article class="order">
+          <h3>${o.customer_name} · ${money(total(o))}</h3>
+          <p class="muted">${o.address}, entre ${o.streets} · Zona: <b>${o.zone}</b><br>Tel: ${o.phone}${o.notes ? ' · ' + o.notes : ''}</p>
+          <div class="items">
+            ${o.order_items.map(i => `
+              <div class="item">
+                <span>${i.product_name}<br><small class="muted">${money(i.price_per_kg)}/${i.sale_unit === 'kg' ? 'kg' : i.sale_unit === 'docena' ? 'docena' : 'unidad'}</small></span>
+                <input type="number" min="0" step="1" value="${i.grams}" onchange="editItem(${i.id},this.value,'grams')">
+                <label><input type="checkbox" ${i.out_of_stock ? 'checked' : ''} onchange="editItem(${i.id},this.checked,'out_of_stock')"> Sin stock</label>
+              </div>`).join('')}
+          </div>
+          <div class="total">Total final: ${money(total(o))}</div>
+          <button class="remove" onclick="removeOrder('${o.id}')">Eliminar pedido</button>
+        </article>`).join('') 
+      : '<p class="empty">Todavía no hay pedidos cargados.</p>';
+  }
+
+  // OPERACIONES SUPABASE
+  async function editItem(id, value, column) {
+    let patch = {};
+    patch[column] = column === 'grams' ? Number(value) : value;
+    let { error } = await db.from('order_items').update(patch).eq('id', id);
+    if (error) { alert('No se pudo guardar el cambio.'); return; }
+    load();
+  }
+
+  async function removeOrder(id) {
+    if (!confirm('¿Eliminar este pedido?')) return;
+    let { error } = await db.from('orders').delete().eq('id', id);
+    if (error) { alert('No se pudo eliminar el pedido.'); return; }
+    load();
+  }
+
+  async function updateProduct(id, column, value) {
+    let patch = {};
+    patch[column] = column === 'price_per_kg' ? Number(value) : value;
+    let { error } = await db.from('products').update(patch).eq('id', id);
+    if (error) { alert('No se pudo guardar el cambio.'); return; }
+    load();
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('¿Eliminar este producto del catálogo?')) return;
+    let { error } = await db.from('products').delete().eq('id', id);
+    if (error) { alert('No se pudo eliminar el producto.'); return; }
+    load();
+  }
+
+  document.querySelector('#catalogForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    let { error } = await db.from('products').insert({
+      icon: document.querySelector('#newIcon').value || '🌿',
+      name: document.querySelector('#newName').value,
+      category: document.querySelector('#newCategory').value,
+      sale_unit: document.querySelector('#newUnit').value,
+      price_per_kg: Number(document.querySelector('#newPrice').value),
+      display_order: productsState.length + 1
+    });
+    if (error) { alert('No se pudo agregar el producto.'); return; }
+    e.target.reset();
+    load();
+  });
+
+  async function logout() { await db.auth.signOut(); showLogin(); }
+  function showLogin() { document.querySelector('#panel').hidden = true; document.querySelector('#login').hidden = false; }
+  async function showPanel() { document.querySelector('#login').hidden = true; document.querySelector('#panel').hidden = false; await load(); }
+
+  document.querySelector('#loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    let box = document.querySelector('#loginMessage');
+    box.hidden = true;
+    let { error } = await db.auth.signInWithPassword({ email: email.value, password: password.value });
+    if (error) {
+      box.textContent = 'No pudimos iniciar sesión. Revisá el email y la contraseña.';
+      box.hidden = false;
+      box.className = 'message error';
+      return;
+    }
+    showPanel();
+  });
+
+  // IMPRESIÓN Y GENERACIÓN DE PDF POR ZONAS
+  function imprimirEnPestana(titulo, htmlBody) {
+    const w = window.open('', '_blank');
+    if (!w) { alert("Permití las ventanas emergentes para imprimir el PDF."); return; }
+    
+    const fullHTML = `<!doctype html>
+      <html>
+      <head>
+        <title>${titulo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; color: #244031; margin: 25px; }
+          h1 { color: #356c47; font-family: Georgia, serif; margin-bottom: 5px; }
+          h2 { color: #244031; border-bottom: 2px solid #88ad67; padding-bottom: 4px; margin-top: 25px; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0 20px; }
+          th, td { border: 1px solid #ded5c2; padding: 8px 10px; text-align: left; font-size: 13px; }
+          th { background-color: #f8f2e4; color: #244031; }
+          .box-check { width: 18px; height: 18px; border: 1px solid #244031; }
+          .card { border: 1px solid #ded5c2; background: #fffdf8; padding: 12px; margin-bottom: 12px; border-radius: 6px; page-break-inside: avoid; }
+          @media print { body { margin: 10mm; } }
+        </style>
+      </head>
+      <body>
+        <h1>Buenasraíces · ${titulo}</h1>
+        <p><small>Fecha de generación: ${new Date().toLocaleDateString('es-AR')}</small></p>
+        ${htmlBody}
+      </body>
+      </html>`;
+
+    w.document.open();
+    w.document.write(fullHTML);
+    w.document.close();
+
+    setTimeout(() => {
+      w.focus();
+      w.print();
+    }, 500);
+  }
+
+  function generarHTMLReparto(pedidos, tituloZona) {
+    let html = `<h2>Zona: ${tituloZona}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:5%;">#</th>
+            <th style="width:25%;">Cliente</th>
+            <th style="width:35%;">Dirección / Entre calles</th>
+            <th style="width:15%;">Teléfono</th>
+            <th style="width:15%;">Notas</th>
+            <th style="width:5%;">Entregado</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
+    pedidos.forEach((o, i) => {
+      html += `<tr>
+        <td><b>${i + 1}</b></td>
+        <td><b>${o.customer_name}</b></td>
+        <td>${o.address}<br><small>entre ${o.streets}</small></td>
+        <td>${o.phone}</td>
+        <td>${o.notes || '-'}</td>
+        <td><div class="box-check"></div></td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    return html;
+  }
+
+  function generarHTMLPedidos(pedidos, tituloZona) {
+    let html = `<h2>Zona: ${tituloZona}</h2>`;
+    pedidos.forEach((o, i) => {
+      html += `<div class="card">
+        <h3>#${i + 1} - ${o.customer_name} (Total: ${money(total(o))})</h3>
+        <p>📍 <b>Dirección:</b> ${o.address} (entre ${o.streets}) | 📞 <b>Tel:</b> ${o.phone}</p>
+        ${o.notes ? `<p>📝 <b>Notas:</b> ${o.notes}</p>` : ''}
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad / Peso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      
+      (o.order_items || []).forEach(item => {
+        html += `<tr>
+          <td>${item.product_name}</td>
+          <td><b>${formatQuantity(item)}</b></td>
+          <td>${item.out_of_stock ? '<span style="color:red;">SIN STOCK</span>' : 'OK'}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></div>`;
+    });
+    return html;
+  }
+
+  function imprimirRepartoZona(zona) {
+    let filtrados = ordersState.filter(o => o.zone === zona);
+    if (!filtrados.length) return alert('No hay pedidos en esta zona.');
+    imprimirEnPestana(`Hoja de Reparto - ${zona}`, generarHTMLReparto(filtrados, zona));
+  }
+
+  function imprimirPedidosZona(zona) {
+    let filtrados = ordersState.filter(o => o.zone === zona);
+    if (!filtrados.length) return alert('No hay pedidos en esta zona.');
+    imprimirEnPestana(`Detalle de Pedidos - ${zona}`, generarHTMLPedidos(filtrados, zona));
+  }
+
+  function imprimirGeneralReparto() {
+    if (!ordersState.length) return alert('No hay pedidos cargados.');
+    let groups = ordersState.reduce((a, o) => { (a[o.zone] ??= []).push(o); return a; }, {});
+    let html = '';
+    Object.entries(groups).forEach(([z, os]) => { html += generarHTMLReparto(os, z); });
+    imprimirEnPestana('Hoja de Reparto General', html);
+  }
+
+  function imprimirGeneralPedidos() {
+    if (!ordersState.length) return alert('No hay pedidos cargados.');
+    let groups = ordersState.reduce((a, o) => { (a[o.zone] ??= []).push(o); return a; }, {});
+    let html = '';
+    Object.entries(groups).forEach(([z, os]) => { html += generarHTMLPedidos(os, z); });
+    imprimirEnPestana('Detalle General de Pedidos', html);
+  }
+
+  db.auth.getSession().then(({ data: { session } }) => session ? showPanel() : showLogin());
+</script>
+</body>
+</html>
