@@ -103,7 +103,7 @@
       </nav>
 
       <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.0
+        Buenas Raíces v2.1
       </div>
     </aside>
 
@@ -127,7 +127,7 @@
             <div class="form-grid">
               <div class="field">
                 <label for="name">Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Tomate Platense">
+                <input id="name" required placeholder="Ej. Oregano, Tomate, Miel">
               </div>
 
               <div class="field">
@@ -146,24 +146,27 @@
               </div>
 
               <div class="field">
-                <label for="price">Precio ($)</label>
-                <input id="price" type="number" step="0.01" required placeholder="Ej. 2500">
-              </div>
-
-              <div class="field">
-                <label for="sale_unit">Unidad de Venta</label>
-                <select id="sale_unit" required>
+                <label for="sale_unit">Unidad de Venta / Fraccionamiento</label>
+                <select id="sale_unit" required onchange="updatePriceLabel()">
                   <option value="kg">Por Kilo (kg)</option>
-                  <option value="unidad">Por Unidad</option>
+                  <option value="1g">Por Gramo (1g)</option>
+                  <option value="50g">Paquete de 50g</option>
                   <option value="100g">Paquete de 100g</option>
+                  <option value="250g">Paquete de 250g</option>
                   <option value="500g">Paquete de 500g</option>
+                  <option value="unidad">Por Unidad</option>
                   <option value="docena">Por Docena</option>
                 </select>
               </div>
 
               <div class="field">
+                <label for="price" id="priceLabel">Precio por Kilo ($)</label>
+                <input id="price" type="number" step="0.01" required placeholder="Ej. 2500">
+              </div>
+
+              <div class="field">
                 <label for="icon">Icono Emoji (Fallback)</label>
-                <input id="icon" placeholder="Ej. 🍅, 🥬, 🧀" maxlength="4">
+                <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀" maxlength="4">
               </div>
 
               <div class="field">
@@ -173,7 +176,7 @@
 
               <div class="field full">
                 <label for="image_url">URL de la Foto del Producto (Opcional)</label>
-                <input id="image_url" type="url" placeholder="https://ejemplo.com/foto-tomate.jpg">
+                <input id="image_url" type="url" placeholder="https://ejemplo.com/foto.jpg">
                 <small style="color: var(--muted); font-size: 11px; margin-top: 3px;">
                   Si pegás un enlace directo a una imagen (jpg/png), se mostrará la foto real en la tienda en lugar del emoji.
                 </small>
@@ -219,6 +222,21 @@
   <script>
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
+
+    // Cambiar texto de ayuda del precio según unidad seleccionada
+    function updatePriceLabel() {
+      const unit = document.getElementById('sale_unit').value;
+      const label = document.getElementById('priceLabel');
+      
+      if (unit === 'kg') label.textContent = 'Precio por Kilo ($)';
+      else if (unit === '1g') label.textContent = 'Precio por Gramo ($)';
+      else if (unit === '50g') label.textContent = 'Precio por Paquete de 50g ($)';
+      else if (unit === '100g') label.textContent = 'Precio por Paquete de 100g ($)';
+      else if (unit === '250g') label.textContent = 'Precio por Paquete de 250g ($)';
+      else if (unit === '500g') label.textContent = 'Precio por Paquete de 500g ($)';
+      else if (unit === 'docena') label.textContent = 'Precio por Docena ($)';
+      else label.textContent = 'Precio por Unidad ($)';
+    }
 
     // Cambiar entre pestañas/vistas
     function switchView(viewId, element) {
@@ -327,11 +345,13 @@
       document.getElementById('prodId').value = p.id;
       document.getElementById('name').value = p.name;
       document.getElementById('category').value = p.category || 'Verduras';
-      document.getElementById('price').value = p.price_per_kg;
       document.getElementById('sale_unit').value = p.sale_unit || 'kg';
+      document.getElementById('price').value = p.price_per_kg;
       document.getElementById('icon').value = p.icon || '';
       document.getElementById('display_order').value = p.display_order || 1;
       document.getElementById('image_url').value = p.image_url || '';
+
+      updatePriceLabel();
 
       document.getElementById('formTitle').textContent = 'Editar Producto: ' + p.name;
       document.getElementById('btnSave').textContent = 'Actualizar Producto';
@@ -344,6 +364,7 @@
       document.getElementById('productForm').reset();
       document.getElementById('formTitle').textContent = 'Agregar Producto';
       document.getElementById('btnSave').textContent = 'Guardar Producto';
+      updatePriceLabel();
     }
 
     // Eliminar producto
