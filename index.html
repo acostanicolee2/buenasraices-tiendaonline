@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Buenas Raíces · Productos orgánicos de estación</title>
   
-  <!-- Swiper CSS para la galería de fotos -->
+  <!-- Swiper CSS para la galería/carrusel de fotos -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
   <style>
@@ -40,14 +40,17 @@
     .delivery-card b { font-size: 17px; }
     .delivery-card p { font-size: 13.5px; color: #e7f0df; margin: 6px 0 0; line-height: 1.4; }
 
-    /* Galería de Fotos (Slider Swiper) */
-    .gallery-section { margin-top: 25px; }
-    .swiper { width: 100%; height: 280px; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
-    .swiper-slide { position: relative; }
-    .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+    /* Galería / Carrusel de Fotos (Swiper) */
+    .gallery-section { margin-top: 30px; }
+    .swiper { width: 100%; height: 320px; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+    .swiper-slide { position: relative; width: 100%; height: 100%; }
+    .swiper-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .slide-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 15px 20px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; font-size: 14px; font-weight: 600; }
+    
+    /* Flechas y Puntos del Carrusel */
     .swiper-button-next, .swiper-button-prev { color: #fff !important; background: rgba(36, 64, 49, 0.6); width: 42px !important; height: 42px !important; border-radius: 50%; }
     .swiper-button-next:after, .swiper-button-prev:after { font-size: 18px !important; font-weight: bold; }
+    .swiper-pagination-bullet-active { background: var(--leaf) !important; }
 
     /* Buscador y Filtros por Categorías */
     .filter-bar { margin: 30px 0 10px; display: flex; flex-direction: column; gap: 15px; }
@@ -117,7 +120,7 @@
       .summary { position: static; }
       .form-grid { grid-template-columns: 1fr; }
       .field.full { grid-column: auto; }
-      .swiper { height: 200px; }
+      .swiper { height: 210px; }
     }
   </style>
 </head>
@@ -145,57 +148,50 @@
         </div>
       </div>
 
-      
-     <!-- CARRUSEL DE VISTA PREVIA Del Campo / Huerta -->
-<section class="carousel-container">
-  <div class="carousel-track" id="carouselTrack">
-    
-    <!-- Foto 1 -->
-    <div class="carousel-slide">
-      <img src="slide1.jpg" alt="Vista previa 1">
+      <!-- CARRUSEL / VISTA PREVIA CON SWIPER -->
+      <div class="gallery-section">
+        <div class="swiper">
+          <div class="swiper-wrapper">
+            <!-- Foto 1 -->
+            <div class="swiper-slide">
+              <img src="slide1.jpg" alt="Vista previa 1">
+              <div class="slide-caption">Nuestros cultivos de estación</div>
+            </div>
+            <!-- Foto 2 -->
+            <div class="swiper-slide">
+              <img src="slide2.jpg" alt="Vista previa 2">
+              <div class="slide-caption">Cosecha fresca del día</div>
+            </div>
+            <!-- Foto 3 -->
+            <div class="swiper-slide">
+              <img src="slide3.jpg" alt="Vista previa 3">
+              <div class="slide-caption">Productos 100% orgánicos</div>
+            </div>
+            <!-- Foto 4 -->
+            <div class="swiper-slide">
+              <img src="slide4.jpg" alt="Vista previa 4">
+              <div class="slide-caption">Armado cuidadoso de bandejas</div>
+            </div>
+            <!-- Foto 5 -->
+            <div class="swiper-slide">
+              <img src="slide5.jpg" alt="Vista previa 5">
+              <div class="slide-caption">Miel pura y artesanal</div>
+            </div>
+            <!-- Foto 6 -->
+            <div class="swiper-slide">
+              <img src="slide6.jpg" alt="Vista previa 6">
+              <div class="slide-caption">Envíos directos a tu hogar</div>
+            </div>
+          </div>
+          <!-- Controles de navegación -->
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+
     </div>
-
-    <!-- Foto 2 -->
-    <div class="carousel-slide">
-      <img src="slide2.jpg" alt="Vista previa 2">
-    </div>
-
-    <!-- Foto 3 -->
-    <div class="carousel-slide">
-      <img src="slide3.jpg" alt="Vista previa 3">
-    </div>
-
-    <!-- Foto 4 -->
-    <div class="carousel-slide">
-      <img src="slide4.jpg" alt="Vista previa 4">
-    </div>
-
-    <!-- Foto 5 -->
-    <div class="carousel-slide">
-      <img src="slide5.jpg" alt="Vista previa 5">
-    </div>
-
-    <!-- Foto 6 -->
-    <div class="carousel-slide">
-      <img src="slide6.jpg" alt="Vista previa 6">
-    </div>
-
-  </div>
-
-  <!-- Botones de Navegación -->
-  <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)">&#10094;</button>
-  <button class="carousel-btn next-btn" onclick="moveCarousel(1)">&#10095;</button>
-
-  <!-- Indicadores (Puntos) -->
-  <div class="carousel-dots" id="carouselDots">
-    <span class="dot active" onclick="goToSlide(0)"></span>
-    <span class="dot" onclick="goToSlide(1)"></span>
-    <span class="dot" onclick="goToSlide(2)"></span>
-    <span class="dot" onclick="goToSlide(3)"></span>
-    <span class="dot" onclick="goToSlide(4)"></span>
-    <span class="dot" onclick="goToSlide(5)"></span>
-  </div>
-</section>
+  </header>
 
   <main class="wrap">
     
@@ -307,14 +303,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <script>
-    // Inicializar Swiper Galería
+    // Inicializar Swiper Galería (Carrusel de 6 fotos)
     const swiper = new Swiper('.swiper', {
       loop: true,
       autoplay: { delay: 4000, disableOnInteraction: false },
       navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+      pagination: { el: '.swiper-pagination', clickable: true },
     });
 
-    // Mínimos de compra por Zona (Podés cambiar los montos)
+    // Mínimos de compra por Zona
     const ZONES_MINIMUMS = {
       'Oeste': 5000,
       'CABA': 10000,
@@ -559,7 +556,6 @@
       notice.style.display = 'block';
       notice.innerHTML = `<b>¡Gracias, ${customer.name.split(' ')[0]}!</b> Tu pedido fue registrado correctamente. Se abrirá WhatsApp para enviar el resumen a la tienda.`;
 
-      // Abrir WhatsApp en nueva pestaña
       window.open(waUrl, '_blank');
 
       e.target.reset();
