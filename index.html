@@ -242,7 +242,7 @@
             </div>
             <div class="field">
               <label for="phone">WhatsApp</label>
-              <input id="phone" required placeholder="Ej. 11 1234 5678">
+              <input id="phone" required placeholder="Ej. 11 5138 4479 ">
             </div>
             <div class="field full">
               <label for="address">Dirección</label>
@@ -258,9 +258,18 @@
               <datalist id="localidadesList">
                 <option value="González Catán"></option>
                 <option value="Gregorio de Laferrere"></option>
+                 <option value="Ciudad evita"></option>
+                 <option value="Isidro Casanova"></option>
                 <option value="San Justo"></option>
                 <option value="Ramos Mejía"></option>
                 <option value="Virrey del Pino"></option>
+                 <option value="Haedo"></option>
+                 <option value="Moron"></option>
+                 <option value="Merlo"></option>
+                 <option value="San martin"></option> 
+                <option value="San Miguel"></option>
+                 <option value="Ituzaingo"></option>
+                 <option value="Paso del rey"></option>
                 <option value="Palermo"></option>
                 <option value="Flores"></option>
                 <option value="Caballito"></option>
@@ -271,10 +280,10 @@
               <label for="zone">Zona de entrega</label>
               <select id="zone" required onchange="renderCart()">
                 <option value="">Elegí tu zona</option>
-                <option value="Oeste">Zona Oeste (Mínimo $5.000)</option>
-                <option value="CABA">CABA (Mínimo $10.000)</option>
-                <option value="Norte">Zona Norte (Mínimo $12.000)</option>
-                <option value="Sur">Zona Sur (Mínimo $12.000)</option>
+                <option value="Oeste">Zona Oeste (Mínimo $50.000)</option>
+                <option value="CABA">CABA (Mínimo $50.000)</option>
+                <option value="Norte">Zona Norte (Mínimo $60.000)</option>
+                <option value="Sur">Zona Sur (Mínimo $50.000)</option>
               </select>
             </div>
             <div class="field full">
@@ -313,16 +322,16 @@
 
     // Mínimos de compra por Zona
     const ZONES_MINIMUMS = {
-      'Oeste': 5000,
-      'CABA': 10000,
-      'Norte': 12000,
-      'Sur': 12000
+      'Oeste': 50000,
+      'CABA': 50000,
+      'Norte': 60000,
+      'Sur': 50000
     };
 
     // Categorías disponibles
     const CATEGORIES = [
-      'Todas', 'Verduras', 'Frutas', 'Condimentos', 'Quesos', 
-      'Bandejas', 'Miel', 'Combos', 'Mermeladas/dulces', 'Especias para el mate'
+      'Todas', 'Verduras', 'Frutas', 'Condimentos', 'Quesos','Huevos', 'Aceite',
+      'Bandejas', 'Miel', 'Combos', 'Mermeladas/dulces', 'Especias para el mate' ,'Cernes - Pollo', 
     ];
 
     let products = [];
@@ -333,6 +342,8 @@
     
     function saleLabel(unit) {
       if (unit === 'kg') return 'kg';
+      if (unit === '25g') return '25g';
+      if (unit === '30g') return '30g';
       if (unit === '100g') return '100g';
       if (unit === '500g') return '500g';
       if (unit === 'docena') return 'docena';
