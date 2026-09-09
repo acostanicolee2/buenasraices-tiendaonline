@@ -145,30 +145,57 @@
         </div>
       </div>
 
-      <!-- Galería de Fotos del Campo / Huerta -->
-      <div class="gallery-section">
-        <div class="swiper">
-          <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80" alt="Campos y Huertas Orgánicas">
-              <div class="slide-caption">Nuestra huerta libre de agrotóxicos</div>
-            </div>
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=1200&q=80" alt="Cosecha Fresca">
-              <div class="slide-caption">Cosecha del día seleccionada con amor</div>
-            </div>
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?auto=format&fit=crop&w=1200&q=80" alt="Animales de Campo">
-              <div class="slide-caption">Entorno natural y sustentable</div>
-            </div>
-          </div>
-          <div class="swiper-button-next"></div>
-          <div class="swiper-button-prev"></div>
-        </div>
-      </div>
-
+      
+     <!-- CARRUSEL DE VISTA PREVIA Del Campo / Huerta -->
+<section class="carousel-container">
+  <div class="carousel-track" id="carouselTrack">
+    
+    <!-- Foto 1 -->
+    <div class="carousel-slide">
+      <img src="img/banner1.jpg" alt="Vista previa 1">
     </div>
-  </header>
+
+    <!-- Foto 2 -->
+    <div class="carousel-slide">
+      <img src="img/banner2.jpg" alt="Vista previa 2">
+    </div>
+
+    <!-- Foto 3 -->
+    <div class="carousel-slide">
+      <img src="img/banner3.jpg" alt="Vista previa 3">
+    </div>
+
+    <!-- Foto 4 -->
+    <div class="carousel-slide">
+      <img src="img/banner4.jpg" alt="Vista previa 4">
+    </div>
+
+    <!-- Foto 5 -->
+    <div class="carousel-slide">
+      <img src="img/banner5.jpg" alt="Vista previa 5">
+    </div>
+
+    <!-- Foto 6 -->
+    <div class="carousel-slide">
+      <img src="img/banner6.jpg" alt="Vista previa 6">
+    </div>
+
+  </div>
+
+  <!-- Botones de Navegación -->
+  <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)">&#10094;</button>
+  <button class="carousel-btn next-btn" onclick="moveCarousel(1)">&#10095;</button>
+
+  <!-- Indicadores (Puntos) -->
+  <div class="carousel-dots" id="carouselDots">
+    <span class="dot active" onclick="goToSlide(0)"></span>
+    <span class="dot" onclick="goToSlide(1)"></span>
+    <span class="dot" onclick="goToSlide(2)"></span>
+    <span class="dot" onclick="goToSlide(3)"></span>
+    <span class="dot" onclick="goToSlide(4)"></span>
+    <span class="dot" onclick="goToSlide(5)"></span>
+  </div>
+</section>
 
   <main class="wrap">
     
