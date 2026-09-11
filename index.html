@@ -65,20 +65,124 @@
     /* Layout Principal de Tienda */
     .section { padding: 25px 0 50px; }
     .grid { display: grid; grid-template-columns: 1.4fr .8fr; gap: 28px; align-items: start; }
-    .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     
-    .product { background: var(--paper); border: 1px solid var(--line); padding: 17px; border-radius: 16px; transition: .2s; }
-    .product:focus-within, .product:hover { border-color: #8eb370; box-shadow: var(--shadow); }
-    .product-top { display: flex; gap: 12px; align-items: flex-start; }
-    .emoji, .product-photo { width: 48px; height: 48px; border-radius: 10px; flex: 0 0 48px; }
-    .emoji { font-size: 28px; line-height: 48px; text-align: center; background: #f3eddc; }
-    .product-photo { object-fit: cover; }
-    .product h3 { font-size: 16px; margin: 1px 0 3px; }
-    .price { font-size: 13px; color: var(--muted); }
-    .product-controls { display: flex; gap: 8px; margin-top: 15px; }
-    .product select, .product input { border: 1px solid var(--line); background: #fff; padding: 10px; border-radius: 99px; font: inherit; color: var(--ink); }
-    .product select { width: 105px; }
-    .product input { width: 100%; min-width: 0; }
+    /* Grilla de 2 columnas para productos */
+    .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    
+    /* Tarjeta vertical tipo póster */
+    .product { 
+      position: relative;
+      background: var(--ink);
+      border-radius: 20px; 
+      overflow: hidden;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .product:focus-within, .product:hover { 
+      transform: translateY(-3px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.2); 
+    }
+
+    .product-bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .product-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.88) 20%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0) 100%);
+      z-index: 2;
+    }
+
+    .product-content {
+      position: relative;
+      z-index: 3;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .product-emoji {
+      font-size: 32px;
+      margin-bottom: 2px;
+    }
+
+    .product h3 { 
+      font-family: Georgia, serif; 
+      font-size: 18px; 
+      font-weight: 700;
+      margin: 0; 
+      color: #ffffff; 
+      line-height: 1.15;
+    }
+
+    .product .price { 
+      font-size: 13px; 
+      color: var(--lime);
+      font-weight: 600;
+    }
+
+    .product-category-tag {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .product-note {
+      font-size: 10.5px;
+      color: #f1f8e9;
+      opacity: 0.9;
+    }
+
+    /* Controles de cantidad */
+    .product-controls { 
+      display: flex; 
+      gap: 6px; 
+      margin-top: 8px; 
+    }
+
+    .product-controls input, 
+    .product-controls select { 
+      background: rgba(255, 255, 255, 0.15) !important; 
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3) !important; 
+      color: #ffffff !important; 
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .product-controls input {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .product-controls select {
+      width: 100px;
+      cursor: pointer;
+    }
+
+    .product-controls input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .product-controls select option {
+      background: #244031;
+      color: #fff;
+    }
 
     /* Carrito / Resumen */
     .summary { background: #264e36; color: #fff; border-radius: 18px; padding: 23px; position: sticky; top: 18px; }
@@ -115,7 +219,7 @@
 
     @media(max-width: 800px) {
       .hero-grid, .grid { grid-template-columns: 1fr; }
-      .products { grid-template-columns: 1fr; }
+      .products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .delivery-card { display: none; }
       .summary { position: static; }
       .form-grid { grid-template-columns: 1fr; }
@@ -347,8 +451,8 @@
       if (unit === '250g') return '250g';
       if (unit === '500g') return '500g';
       if (unit === 'docena') return 'docena';
-      if (unit === 'unidad_peso') return 'kg (se vende por unidad)';
-      return 'unidad';
+      if (unit === 'unidad_peso') return 'kg (por un.)';
+      return 'un.';
     }
 
     // Renderizar botones de categorías
@@ -388,31 +492,35 @@
         let isUnitByWeight = (unit === 'unidad_peso');
 
         let selector = unit === 'kg' 
-          ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="renderCart()"><option value="kg">kg</option><option value="g">gramos</option></select>` 
-          : `<select aria-label="Unidad"><option>${isUnitByWeight ? 'unidad' : saleLabel(unit)}</option></select>`;
+          ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="renderCart()"><option value="kg">kg</option><option value="g">gr</option></select>` 
+          : `<select aria-label="Unidad"><option>${isUnitByWeight ? 'un.' : saleLabel(unit)}</option></select>`;
 
-        // Aclaración si se vende por unidad pero se cobra según peso por kg
         let weightNote = isUnitByWeight 
-          ? `<div style="font-size:11px; color: var(--leaf); margin-top:2px; font-weight:600;">*Peso aprox: 2.5kg c/u. Se pesa al preparar.</div>`
+          ? `<div class="product-note">*Aprox 2.5kg. Se pesa al preparar.</div>`
           : '';
 
         let priceText = isUnitByWeight 
-          ? `${money(p.price)} / kg (se vende por unidad)` 
+          ? `${money(p.price)} / kg` 
           : `${money(p.price)} / ${saleLabel(unit)}`;
 
+        let bgImage = p.image_url ? `<img class="product-bg" src="${p.image_url}" alt="${p.name}">` : '';
+        let emojiDisplay = !p.image_url ? `<div class="product-emoji">${p.icon || '🌱'}</div>` : '';
+
         return `<article class="product">
-          <div class="product-top">
-            ${p.image_url ? `<img class="product-photo" src="${p.image_url}" alt="${p.name}">` : `<span class="emoji">${p.icon || '🌱'}</span>`}
-            <div>
-              <h3>${p.name}</h3>
-              <div class="price">${priceText}</div>
-              ${weightNote}
-              <div class="price" style="font-size:11px; color:#888;">${p.category || ''}</div>
+          ${bgImage}
+          <div class="product-overlay"></div>
+          
+          <div class="product-content">
+            ${emojiDisplay}
+            <h3>${p.name}</h3>
+            <div class="price">${priceText}</div>
+            ${weightNote}
+            ${p.category ? `<div class="product-category-tag">${p.category}</div>` : ''}
+            
+            <div class="product-controls">
+              <input aria-label="Cantidad de ${p.name}" type="number" min="0" step="${unit === 'kg' ? '0.1' : '1'}" placeholder="Cant." data-id="${p.id}" oninput="renderCart()">
+              ${selector}
             </div>
-          </div>
-          <div class="product-controls">
-            <input aria-label="Cantidad de ${p.name}" type="number" min="0" step="${unit === 'kg' ? '0.1' : '1'}" placeholder="Cantidad" data-id="${p.id}" oninput="renderCart()">
-            ${selector}
           </div>
         </article>`;
       }).join('');
