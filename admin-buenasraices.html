@@ -36,7 +36,7 @@
 
     /* Área de Contenido */
     .main-content { flex: 1; overflow-y: auto; padding: 35px 40px; background: var(--cream); }
-    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
     .header-bar h1 { font-family: Georgia, serif; margin: 0; font-size: 30px; font-weight: 400; }
 
     /* Vistas / Secciones */
@@ -54,12 +54,13 @@
     input, select { font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 11px; background: #fff; color: var(--ink); outline: none; }
     input:focus, select:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px #356c4718; }
     
-    .btn { border: 0; border-radius: 10px; background: var(--leaf); color: #fff; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .btn { border: 0; border-radius: 10px; background: var(--leaf); color: #fff; padding: 10px 18px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:hover { background: #285235; }
     .btn-secondary { background: #e0d8c3; color: var(--ink); }
     .btn-secondary:hover { background: #d0c5a9; }
-    .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background: var(--danger); color: #fff; padding: 5px 10px; font-size: 12px; }
     .btn-danger:hover { background: #bd362f; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 6px; }
 
     /* Tabla de Productos y Pedidos */
     .table-responsive { overflow-x: auto; }
@@ -69,18 +70,41 @@
     
     .prod-img-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e5dbc4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
+    /* Agrupación por Zonas */
+    .zone-group { margin-bottom: 35px; }
+    .zone-header { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
     /* Tarjetas de Pedidos */
     .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
     .order-title { font-weight: bold; font-size: 18px; color: var(--leaf); }
     .order-date { font-size: 12px; color: var(--muted); }
     .order-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px; font-size: 14px; }
-    .order-items-list { background: #fdfbf7; border: 1px solid var(--line); border-radius: 8px; padding: 12px 15px; list-style: none; margin: 0; }
-    .order-items-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
-    .order-items-list li:last-child { border-bottom: none; }
+    .order-items-table { width: 100%; margin-top: 10px; border-collapse: collapse; background: #fdfbf7; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+    .order-items-table th { font-size: 12px; background: #f3edd9; padding: 8px 10px; }
+    .order-items-table td { padding: 8px 10px; font-size: 13.5px; }
 
     /* Modales / Mensajes */
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; }
+
+    /* Estilos de Impresión / PDF */
+    @media print {
+      body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
+      .sidebar, .header-bar, .notice, .btn, .no-print { display: none !important; }
+      .main-content { padding: 0 !important; overflow: visible !important; }
+      
+      /* Salto de página entre zonas distintas */
+      .zone-group { page-break-after: always; margin-bottom: 0; }
+      .zone-group:last-child { page-break-after: auto; }
+      .zone-header { background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 10px; }
+
+      .card, .order-card { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 15px !important; page-break-inside: avoid; }
+      .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
+      .print-hide-price .price-col, .print-hide-price .order-total { display: none !important; }
+      .print-only { display: inline !important; }
+    }
+    .print-only { display: none; }
+    .print-only-title { display: none; }
 
     @media (max-width: 900px) {
       .admin-layout { flex-direction: column; height: auto; overflow: visible; }
@@ -107,13 +131,10 @@
         <a class="nav-item" onclick="switchView('ordersView', this)">
           <span class="icon">📦</span> Pedidos
         </a>
-        <a class="nav-item disabled" title="Próximamente">
-          <span class="icon">📊</span> Estadísticas <small style="font-size: 10px; background: #ffffff22; padding: 2px 6px; border-radius: 4px; margin-left: auto;">Próximamente</small>
-        </a>
       </nav>
 
       <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.2
+        Buenas Raíces v2.6
       </div>
     </aside>
 
@@ -195,9 +216,6 @@
               <div class="field full">
                 <label for="image_url">URL de la Foto del Producto (Opcional)</label>
                 <input id="image_url" type="url" placeholder="https://ejemplo.com/foto.jpg">
-                <small style="color: var(--muted); font-size: 11px; margin-top: 3px;">
-                  Si pegás un enlace directo a una imagen (jpg/png), se mostrará la foto real en la tienda en lugar del emoji.
-                </small>
               </div>
             </div>
 
@@ -215,7 +233,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Imagen / Icono</th>
+                  <th>Imagen</th>
                   <th>Nombre</th>
                   <th>Categoría</th>
                   <th>Precio</th>
@@ -234,9 +252,19 @@
 
       <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
       <section id="ordersView" class="view-section">
-        <div class="header-bar">
+        
+        <h1 class="print-only-title" id="printReportTitle">Lista de Pedidos — Buenas Raíces</h1>
+
+        <div class="header-bar no-print">
           <h1>Pedidos Realizados</h1>
-          <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar Lista</button>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <select id="zoneFilter" onchange="filterOrdersByZone()" style="padding: 8px 12px; font-weight: bold;">
+              <option value="ALL">Todas las Zonas</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar</button>
+            <button class="btn" onclick="printReport('full')">📄 PDF Pedidos Completo</button>
+            <button class="btn btn-secondary" onclick="printReport('delivery')">🚚 PDF Hoja de Reparto</button>
+          </div>
         </div>
 
         <div id="ordersContainer">
@@ -252,40 +280,27 @@
   <script>
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
+    let rawOrders = [];
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
-    // Cambiar texto de ayuda del precio según unidad seleccionada
     function updatePriceLabel() {
       const unit = document.getElementById('sale_unit').value;
       const label = document.getElementById('priceLabel');
-      
       if (unit === 'kg') label.textContent = 'Precio por Kilo ($)';
       else if (unit === '1g') label.textContent = 'Precio por Gramo ($)';
-      else if (unit === '25g') label.textContent = 'Precio por 25g ($)';
-      else if (unit === '30g') label.textContent = 'Precio por 30g ($)';
-      else if (unit === '50g') label.textContent = 'Precio por 50g ($)';
-      else if (unit === '100g') label.textContent = 'Precio por 100g ($)';
-      else if (unit === '250g') label.textContent = 'Precio por 250g ($)';
-      else if (unit === '500g') label.textContent = 'Precio por 500g ($)';
-      else if (unit === 'docena') label.textContent = 'Precio por Docena ($)';
       else if (unit === 'unidad_peso') label.textContent = 'Precio por Kilo ($) [Se vende por unidad]';
       else label.textContent = 'Precio por Unidad ($)';
     }
 
-    // Cambiar entre pestañas/vistas
     function switchView(viewId, element) {
-      if (element.classList.contains('disabled')) return;
-      
       document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 
       document.getElementById(viewId).classList.add('active');
       element.classList.add('active');
 
-      if (viewId === 'ordersView') {
-        loadOrders();
-      }
+      if (viewId === 'ordersView') loadOrders();
     }
 
     function showNotice(msg) {
@@ -295,19 +310,10 @@
       setTimeout(() => notice.style.display = 'none', 4000);
     }
 
-    // Cargar Lista de Productos
+    // --- PRODUCTOS ---
     async function loadProducts() {
-      const { data, error } = await db
-        .from('products')
-        .select('*')
-        .order('display_order', { ascending: true });
-
-      if (error) {
-        alert('Error al cargar productos: ' + error.message);
-        return;
-      }
-
-      allProducts = data;
+      const { data } = await db.from('products').select('*').order('display_order', { ascending: true });
+      allProducts = data || [];
       renderTable();
     }
 
@@ -318,35 +324,24 @@
         return;
       }
 
-      tbody.innerHTML = allProducts.map(p => {
-        const visual = p.image_url 
-          ? `<img src="${p.image_url}" class="prod-img-preview" alt="${p.name}">` 
-          : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`;
-
-        let unitText = p.sale_unit || 'kg';
-        if (unitText === 'unidad_peso') unitText = 'unidad (se cobra x kg)';
-
-        return `
-          <tr>
-            <td>${visual}</td>
-            <td><b>${p.name}</b></td>
-            <td>${p.category || '-'}</td>
-            <td><b>${money(p.price_per_kg)}</b></td>
-            <td>${unitText}</td>
-            <td>${p.display_order || 1}</td>
-            <td>
-              <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="editProduct('${p.id}')">Editar</button>
-              <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+      tbody.innerHTML = allProducts.map(p => `
+        <tr>
+          <td>${p.image_url ? `<img src="${p.image_url}" class="prod-img-preview">` : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`}</td>
+          <td><b>${p.name}</b></td>
+          <td>${p.category || '-'}</td>
+          <td><b>${money(p.price_per_kg)}</b></td>
+          <td>${p.sale_unit || 'kg'}</td>
+          <td>${p.display_order || 1}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
+            <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
     }
 
-    // Formulario: Guardar o Actualizar Producto
     document.getElementById('productForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const prodId = document.getElementById('prodId').value;
       const payload = {
         name: document.getElementById('name').value.trim(),
@@ -359,29 +354,17 @@
         active: true
       };
 
-      let error;
-      if (prodId) {
-        // Editar
-        ({ error } = await db.from('products').update(payload).eq('id', prodId));
-      } else {
-        // Crear
-        ({ error } = await db.from('products').insert(payload));
-      }
+      if (prodId) await db.from('products').update(payload).eq('id', prodId);
+      else await db.from('products').insert(payload);
 
-      if (error) {
-        alert('Ocurrió un error al guardar: ' + error.message);
-      } else {
-        showNotice(prodId ? '¡Producto actualizado correctamente!' : '¡Producto agregado al catálogo!');
-        resetForm();
-        loadProducts();
-      }
+      showNotice(prodId ? '¡Producto actualizado!' : '¡Producto creado!');
+      resetForm();
+      loadProducts();
     });
 
-    // Cargar datos en el formulario para Editar
     function editProduct(id) {
       const p = allProducts.find(item => item.id === id);
       if (!p) return;
-
       document.getElementById('prodId').value = p.id;
       document.getElementById('name').value = p.name;
       document.getElementById('category').value = p.category || 'Verduras';
@@ -390,105 +373,223 @@
       document.getElementById('icon').value = p.icon || '';
       document.getElementById('display_order').value = p.display_order || 1;
       document.getElementById('image_url').value = p.image_url || '';
-
-      updatePriceLabel();
-
       document.getElementById('formTitle').textContent = 'Editar Producto: ' + p.name;
-      document.getElementById('btnSave').textContent = 'Actualizar Producto';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Resetear formulario
     function resetForm() {
       document.getElementById('prodId').value = '';
       document.getElementById('productForm').reset();
       document.getElementById('formTitle').textContent = 'Agregar Producto';
-      document.getElementById('btnSave').textContent = 'Guardar Producto';
-      updatePriceLabel();
     }
 
-    // Eliminar producto
     async function deleteProduct(id, name) {
-      if (!confirm(`¿Estás seguro de que querés eliminar "${name}" del catálogo?`)) return;
-
-      const { error } = await db.from('products').delete().eq('id', id);
-      if (error) {
-        alert('Error al eliminar: ' + error.message);
-      } else {
-        showNotice(`El producto "${name}" fue eliminado.`);
-        loadProducts();
-      }
+      if (!confirm(`¿Eliminar "${name}"?`)) return;
+      await db.from('products').delete().eq('id', id);
+      loadProducts();
     }
 
-    // --- CARGAR Y RENDERIZAR PEDIDOS ---
+    // --- CARGAR Y GESTIONAR PEDIDOS DIVIDIDOS POR ZONA ---
     async function loadOrders() {
       const container = document.getElementById('ordersContainer');
       container.innerHTML = '<p style="color: var(--muted);">Cargando pedidos...</p>';
 
-      const { data: orders, error } = await db
-        .from('orders')
-        .select(`
-          *,
-          order_items (*)
-        `)
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error al cargar pedidos:', error);
-        container.innerHTML = '<p style="color: var(--danger);">Error al cargar los pedidos: ' + error.message + '</p>';
+        container.innerHTML = '<p style="color: var(--danger);">Error al cargar pedidos: ' + error.message + '</p>';
         return;
       }
 
-      if (!orders || orders.length === 0) {
-        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos registrados todavía.</p></div>';
+      rawOrders = data || [];
+      populateZoneFilter();
+      filterOrdersByZone();
+    }
+
+    function populateZoneFilter() {
+      const select = document.getElementById('zoneFilter');
+      const current = select.value;
+      const zones = [...new Set(rawOrders.map(o => (o.zone || o.city || 'Sin Zona').trim()))].sort();
+      
+      select.innerHTML = '<option value="ALL">Todas las Zonas</option>' + 
+        zones.map(z => `<option value="${z}">${z}</option>`).join('');
+      
+      select.value = current;
+    }
+
+    function filterOrdersByZone() {
+      const selectedZone = document.getElementById('zoneFilter').value;
+      let filtered = rawOrders;
+
+      if (selectedZone !== 'ALL') {
+        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+      }
+
+      renderOrdersGroupedByZone(filtered);
+    }
+
+    function renderOrdersGroupedByZone(ordersList) {
+      const container = document.getElementById('ordersContainer');
+      if (!ordersList || ordersList.length === 0) {
+        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos para mostrar.</p></div>';
         return;
       }
 
-      container.innerHTML = orders.map(order => {
-        const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
-        
-        let itemsHtml = '<li>Sin detalles de productos</li>';
-        let totalCalculado = 0;
+      // Agrupar los pedidos por el nombre de la zona
+      const grouped = {};
+      ordersList.forEach(order => {
+        const zoneName = (order.zone || order.city || 'Sin Zona').trim();
+        if (!grouped[zoneName]) grouped[zoneName] = [];
+        grouped[zoneName].push(order);
+      });
 
-        if (order.order_items && order.order_items.length > 0) {
-          itemsHtml = order.order_items.map(item => {
-            const subtotal = item.price || 0;
-            totalCalculado += subtotal;
-            return `
-              <li>
-                <span><b>${item.quantity || 1}x</b> ${item.product_name || 'Producto'} <small style="color: var(--muted);">(${item.sale_unit || 'unidad'})</small></span>
-                <b>${money(subtotal)}</b>
-              </li>
-            `;
-          }).join('');
-        }
+      let html = '';
 
-        return `
-          <div class="order-card">
-            <div class="order-header">
-              <span class="order-title">Pedido #${order.id}</span>
-              <span class="order-date">${orderDate}</span>
+      for (const [zone, zoneOrders] of Object.entries(grouped)) {
+        html += `
+          <div class="zone-group">
+            <div class="zone-header">
+              <span>📍 Zona: ${zone}</span>
+              <span style="font-size: 14px; font-weight: normal;">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
             </div>
-
-            <div class="order-info">
-              <div><b>Cliente:</b> ${order.customer_name || 'Sin nombre'}</div>
-              <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-              <div><b>Dirección:</b> ${order.address || 'Retira / N/A'} ${order.city ? `(${order.city})` : ''}</div>
-              ${order.zone ? `<div><b>Zona:</b> ${order.zone}</div>` : ''}
-              ${order.notes ? `<div style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
-            </div>
-
-            <h4 style="margin: 10px 0 8px; font-size: 14px;">Detalle de la compra:</h4>
-            <ul class="order-items-list">
-              ${itemsHtml}
-            </ul>
-
-            <div style="text-align: right; margin-top: 12px; font-size: 16px;">
-              <b>Total del Pedido: <span style="color: var(--leaf);">${money(order.total || totalCalculado)}</span></b>
-            </div>
+            ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
           </div>
         `;
-      }).join('');
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderSingleOrderCard(order) {
+      const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
+      
+      let totalCalculado = 0;
+      let itemsRows = '';
+
+      if (order.order_items && order.order_items.length > 0) {
+        itemsRows = order.order_items.map(item => {
+          const subtotal = item.price || 0;
+          totalCalculado += subtotal;
+          return `
+            <tr>
+              <td><b>${item.product_name}</b></td>
+              <td>
+                <input type="number" step="0.01" value="${item.quantity || 1}" 
+                  style="width: 70px; padding: 4px;" class="no-print"
+                  onchange="updateItemQuantity('${item.id}', '${order.id}', this.value, ${item.unit_price || 0})">
+                <span class="print-only">${item.quantity || 1}</span> (${item.sale_unit || 'un'})
+              </td>
+              <td class="price-col"><b>${money(subtotal)}</b></td>
+              <td class="no-print" style="text-align: right;">
+                <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}', '${order.id}')">✕</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      return `
+        <div class="order-card" id="order-card-${order.id}">
+          <div class="order-header">
+            <span class="order-title">Pedido #${order.id}</span>
+            <span class="order-date">${orderDate}</span>
+          </div>
+
+          <div class="order-info">
+            <div><b>Cliente:</b> ${order.customer_name || 'Sin nombre'}</div>
+            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+            <div><b>Dirección:</b> ${order.address || 'Retira en local'} (${order.city || 'N/A'})</div>
+            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
+            ${order.notes ? `<div style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+          </div>
+
+          <h4 style="margin: 10px 0 5px; font-size: 14px;" class="price-col">Detalle de la compra:</h4>
+          <table class="order-items-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cant. / Peso Real</th>
+                <th class="price-col">Subtotal</th>
+                <th class="no-print" style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows || '<tr><td colspan="4">Sin productos en el pedido</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="no-print" style="margin-top: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="promptAddItem('${order.id}')">+ Agregar Producto a este Pedido</button>
+          </div>
+
+          <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 17px;">
+            <b>Total Ajustado: <span style="color: var(--leaf);">${money(order.total || totalCalculado)}</span></b>
+          </div>
+        </div>
+      `;
+    }
+
+    // Actualizar Cantidad o Peso de un Ítem de Pedido
+    async function updateItemQuantity(itemId, orderId, newQty, unitPrice) {
+      const qty = parseFloat(newQty);
+      if (isNaN(qty) || qty < 0) return;
+
+      const newSubtotal = qty * unitPrice;
+      await db.from('order_items').update({ quantity: qty, price: newSubtotal }).eq('id', itemId);
+      await recalculateOrderTotal(orderId);
+    }
+
+    // Eliminar Ítem del Pedido
+    async function deleteOrderItem(itemId, orderId) {
+      if (!confirm('¿Quitar este producto del pedido?')) return;
+      await db.from('order_items').delete().eq('id', itemId);
+      await recalculateOrderTotal(orderId);
+    }
+
+    // Agregar Producto Manualmente a un Pedido Existente
+    async function promptAddItem(orderId) {
+      const prodName = prompt("Ingresá el nombre del producto a agregar:");
+      if (!prodName) return;
+      const price = parseFloat(prompt("Ingresá el precio total de este ítem ($):"));
+      if (isNaN(price)) return;
+      const qty = parseFloat(prompt("Ingresá la cantidad / kilo:", "1")) || 1;
+
+      await db.from('order_items').insert({
+        order_id: orderId,
+        product_name: prodName,
+        quantity: qty,
+        price: price,
+        unit_price: price / qty,
+        sale_unit: 'unidad'
+      });
+
+      await recalculateOrderTotal(orderId);
+    }
+
+    // Recalcular y Actualizar Total Global del Pedido
+    async function recalculateOrderTotal(orderId) {
+      const { data: items } = await db.from('order_items').select('price').eq('order_id', orderId);
+      const newTotal = (items || []).reduce((sum, item) => sum + (item.price || 0), 0);
+
+      await db.from('orders').update({ total: newTotal }).eq('id', orderId);
+      showNotice('Pedido #' + orderId + ' actualizado correctamente.');
+      loadOrders();
+    }
+
+    // --- IMPRESIÓN Y GENERACIÓN DE PDF ---
+    function printReport(type) {
+      const container = document.getElementById('ordersContainer');
+      const title = document.getElementById('printReportTitle');
+
+      if (type === 'delivery') {
+        container.classList.add('print-hide-price');
+        title.textContent = "Hoja de Ruta y Reparto — Buenas Raíces";
+      } else {
+        container.classList.remove('print-hide-price');
+        title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
+      }
+
+      window.print();
     }
 
     loadProducts();
