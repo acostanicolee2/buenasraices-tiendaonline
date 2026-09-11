@@ -487,7 +487,7 @@
       
       let totalCalculado = 0;
       let itemsRows = '';
-      let hasMeatItems = false;
+      let meatCount = 0;
 
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
@@ -498,7 +498,7 @@
           const category = item.category || (catalogProd ? catalogProd.category : '');
           
           const isMeat = MEAT_CATEGORIES.includes(category);
-          if (isMeat) hasMeatItems = true;
+          if (isMeat) meatCount++;
 
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
@@ -509,17 +509,19 @@
 
           return `
             <tr class="${isMeat ? 'meat-row' : 'non-meat-row'}">
-              <td><b>${item.product_name}</b> ${isMeat ? '<span style="font-size:11px; background:#f0e2b6; padding:1px 5px; border-radius:4px; font-weight:bold; color:#523a07;">🥩 Carnicería</span>' : ''}</td>
+              <td><b>${item.product_name}</b> ${isMeat ? '<span style="font-size:11px; background:#f0e2b6; padding:1px 5px; border-radius:4px; font-weight:bold; color:#523a07;" class="no-print">🥩 Carnicería</span>' : ''}</td>
               <td>
                 <div class="no-print" style="display: flex; gap: 8px; align-items: center;">
                   <label style="font-size: 11px;">Cant. Unid:
                     <input type="number" step="1" min="1" value="${units}" 
                       style="width: 55px; padding: 3px;"
+                      onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"
                       onchange="updateItemValues('${item.id}', '${order.id}', this.value, null, ${unitPrice}, '${saleUnit}')">
                   </label>
                   <label style="font-size: 11px;">Peso Real (Kg):
                     <input type="number" step="0.01" min="0" value="${weight}" 
                       style="width: 75px; padding: 3px;"
+                      onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"
                       onchange="updateItemValues('${item.id}', '${order.id}', null, this.value, ${unitPrice}, '${saleUnit}')">
                   </label>
                 </div>
@@ -565,6 +567,7 @@
             </thead>
             <tbody>
               ${itemsRows || '<tr><td colspan="5">Sin productos en el pedido</td></tr>'}
+              ${meatCount === 0 ? '<tr class="meat-only-empty" style="display:none;"><td colspan="2" style="font-style:italic; color:var(--muted);">Sin carnes en este pedido</td></tr>' : ''}
             </tbody>
           </table>
 
@@ -685,16 +688,19 @@
       if (type === 'delivery') {
         document.body.classList.add('is-delivery-mode');
         title.textContent = "Hoja de Ruta de Reparto (Carnes) — Buenas Raíces";
+        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'table-row');
       } else {
         document.body.classList.remove('is-delivery-mode');
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
+        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'none');
       }
 
       window.print();
       
-      // Restaurar el diseño original después de lanzar el cuadro de impresión
+      // Restaurar diseño original tras abrir el cuadro de impresión
       setTimeout(() => {
         document.body.classList.remove('is-delivery-mode');
+        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'none');
       }, 1000);
     }
 
