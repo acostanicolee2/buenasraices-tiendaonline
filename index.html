@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -106,7 +105,7 @@
     .field.full { grid-column: 1/-1; }
     label { font-size: 13px; font-weight: 700; }
     input, textarea, select { font: inherit; border: 1px solid var(--line); border-radius: 99px; padding: 11px; background: #fff; color: var(--ink); }
-    textarea { border-radius: 9px; resize: vertical; min-height: 72px; }
+    textarea { border-radius: 99px; resize: vertical; min-height: 72px; }
     .notice { display: none; margin-top: 16px; padding: 13px; border-radius: 10px; background: #edf5df; color: #385a35; line-height: 1.4; }
 
     /* Botón Flotante de WhatsApp */
@@ -329,10 +328,8 @@
       'Carne Vacuna', 'Carnes de Cerdo', 'Pollo'
     ];
 
-    // Peso estimado para productos vendidos por unidad pero cobrados por peso (ej: Pollo entero ~2.5 kg)
-    const AVERAGE_WEIGHT_PER_UNIT = {
-      'pollo': 2.5
-    };
+    // Peso estimado por unidad para productos 'unidad_peso' (2.5 kg aprox)
+    const ESTIMATED_UNIT_WEIGHT = 2.5;
 
     let products = [];
     let selectedCategory = 'Todas';
@@ -350,6 +347,7 @@
       if (unit === '250g') return '250g';
       if (unit === '500g') return '500g';
       if (unit === 'docena') return 'docena';
+      if (unit === 'unidad_peso') return 'kg (se vende por unidad)';
       return 'unidad';
     }
 
@@ -387,19 +385,18 @@
 
       container.innerHTML = listToRender.map(p => {
         let unit = p.sale_unit || 'kg';
-        let lowerName = p.name.toLowerCase();
-        let isPolloUnidad = (unit === 'unidad' && lowerName.includes('pollo'));
+        let isUnitByWeight = (unit === 'unidad_peso');
 
         let selector = unit === 'kg' 
           ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="renderCart()"><option value="kg">kg</option><option value="g">gramos</option></select>` 
-          : `<select aria-label="Unidad"><option>${saleLabel(unit)}</option></select>`;
+          : `<select aria-label="Unidad"><option>${isUnitByWeight ? 'unidad' : saleLabel(unit)}</option></select>`;
 
-        // Aclaración si se vende por unidad pero se cobra según peso
-        let weightNote = isPolloUnidad 
+        // Aclaración si se vende por unidad pero se cobra según peso por kg
+        let weightNote = isUnitByWeight 
           ? `<div style="font-size:11px; color: var(--leaf); margin-top:2px; font-weight:600;">*Peso aprox: 2.5kg c/u. Se pesa al preparar.</div>`
           : '';
 
-        let priceText = isPolloUnidad 
+        let priceText = isUnitByWeight 
           ? `${money(p.price)} / kg (se vende por unidad)` 
           : `${money(p.price)} / ${saleLabel(unit)}`;
 
@@ -426,10 +423,8 @@
         return item.price * (item.g / 1000);
       }
       
-      const lowerName = item.name.toLowerCase();
-      if (item.sale_unit === 'unidad' && lowerName.includes('pollo')) {
-        const avgKg = AVERAGE_WEIGHT_PER_UNIT['pollo'] || 2.5;
-        return item.price * avgKg * item.g; // item.g representa la cantidad de unidades
+      if (item.sale_unit === 'unidad_peso') {
+        return item.price * ESTIMATED_UNIT_WEIGHT * item.g; // item.g representa la cantidad de unidades elegidas
       }
 
       return item.price * item.g;
@@ -445,16 +440,14 @@
             g = saleUnit === 'kg' ? grams(quantity, selected) : quantity;
         
         let labelDisplay = '';
-        const lowerName = p.name.toLowerCase();
 
         if (quantity > 0) {
           if (saleUnit === 'kg') {
             labelDisplay = `${quantity} ${selected === 'kg' ? 'kg' : 'g'}`;
           } else if (saleUnit === '100g' || saleUnit === '250g' || saleUnit === '500g') {
             labelDisplay = `${quantity} paq. (${saleUnit} c/u)`;
-          } else if (saleUnit === 'unidad' && lowerName.includes('pollo')) {
-            const avgKg = AVERAGE_WEIGHT_PER_UNIT['pollo'] || 2.5;
-            labelDisplay = `${quantity} un. (aprox. ${(avgKg * quantity).toFixed(1)} kg)`;
+          } else if (saleUnit === 'unidad_peso') {
+            labelDisplay = `${quantity} un. (aprox. ${(ESTIMATED_UNIT_WEIGHT * quantity).toFixed(1)} kg)`;
           } else {
             labelDisplay = `${quantity} ${saleLabel(saleUnit)}`;
           }
@@ -607,405 +600,4 @@
   </script>
 </body>
 </html>
-
-```
-### 2. Archivo admin.html (Panel de Administración)
-Incluye el selector de categorías unificado, la opción de fraccionamiento corregida y deja todo sincronizado con la tienda.
-```html
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Panel de Control · Buenas Raíces</title>
-  
-  <style>
-    :root {
-      --ink: #244031;
-      --cream: #f8f2e4;
-      --paper: #fffdf8;
-      --leaf: #356c47;
-      --lime: #dcecab;
-      --line: #ded5c2;
-      --muted: #6f776c;
-      --shadow: 0 10px 25px rgba(36,64,49,0.08);
-      --danger: #d9534f;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--cream); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; height: 100vh; overflow: hidden; }
     
-    /* Layout principal con Menú Lateral */
-    .admin-layout { display: flex; height: 100vh; }
-
-    /* Menú Lateral (Sidebar) */
-    .sidebar { width: 260px; background: #1c3327; color: #fff; padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0; }
-    .sidebar-brand { font-family: Georgia, serif; font-size: 22px; font-weight: bold; border-bottom: 1px solid #ffffff22; padding-bottom: 15px; }
-    .sidebar-brand i { font-style: normal; color: #8eb370; }
-    
-    .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #d6e1d2; text-decoration: none; font-weight: 600; font-size: 14.5px; cursor: pointer; transition: 0.2s; }
-    .nav-item:hover, .nav-item.active { background: var(--leaf); color: #fff; }
-    .nav-item .icon { font-size: 18px; }
-    .nav-item.disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* Área de Contenido */
-    .main-content { flex: 1; overflow-y: auto; padding: 35px 40px; background: var(--cream); }
-    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .header-bar h1 { font-family: Georgia, serif; margin: 0; font-size: 30px; font-weight: 400; }
-
-    /* Vistas / Secciones */
-    .view-section { display: none; }
-    .view-section.active { display: block; }
-
-    /* Tarjetas y Formularios */
-    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 30px; }
-    .card h2 { font-family: Georgia, serif; margin: 0 0 15px; font-weight: 400; font-size: 22px; }
-    
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    .field.full { grid-column: 1 / -1; }
-    label { font-size: 13px; font-weight: 700; color: var(--ink); }
-    input, select { font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 11px; background: #fff; color: var(--ink); outline: none; }
-    input:focus, select:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px #356c4718; }
-    
-    .btn { border: 0; border-radius: 10px; background: var(--leaf); color: #fff; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; }
-    .btn:hover { background: #285235; }
-    .btn-secondary { background: #e0d8c3; color: var(--ink); }
-    .btn-secondary:hover { background: #d0c5a9; }
-    .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; }
-    .btn-danger:hover { background: #bd362f; }
-
-    /* Tabla de Productos */
-    .table-responsive { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-    th, td { padding: 12px 15px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-    th { background: #f0e7d3; font-weight: 700; color: var(--ink); }
-    
-    .prod-img-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e5dbc4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-
-    /* Modales / Mensajes */
-    .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; }
-
-    @media (max-width: 900px) {
-      .admin-layout { flex-direction: column; height: auto; overflow: visible; }
-      body { overflow: auto; }
-      .sidebar { width: 100%; height: auto; }
-      .main-content { padding: 20px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .field.full { grid-column: auto; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="admin-layout">
-    
-    <!-- Menú Lateral -->
-    <aside class="sidebar">
-      <div class="sidebar-brand">Buenas<i>raíces</i> Admin</div>
-      
-      <nav class="nav-menu">
-        <a class="nav-item active" onclick="switchView('productsView', this)">
-          <span class="icon">🌱</span> Catálogo de Productos
-        </a>
-        <a class="nav-item disabled" title="Próximamente">
-          <span class="icon">📦</span> Pedidos <small style="font-size: 10px; background: #ffffff22; padding: 2px 6px; border-radius: 4px; margin-left: auto;">Próximamente</small>
-        </a>
-        <a class="nav-item disabled" title="Próximamente">
-          <span class="icon">📊</span> Estadísticas <small style="font-size: 10px; background: #ffffff22; padding: 2px 6px; border-radius: 4px; margin-left: auto;">Próximamente</small>
-        </a>
-      </nav>
-
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.1
-      </div>
-    </aside>
-
-    <!-- Área de Contenido Principal -->
-    <main class="main-content">
-      <div id="notice" class="notice"></div>
-
-      <!-- SECCIÓN 1: CATÁLOGO DE PRODUCTOS -->
-      <section id="productsView" class="view-section active">
-        <div class="header-bar">
-          <h1>Gestión del Catálogo</h1>
-          <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
-        </div>
-
-        <!-- Formulario Crear/Editar Producto -->
-        <div class="card">
-          <h2 id="formTitle">Agregar Producto</h2>
-          <form id="productForm">
-            <input type="hidden" id="prodId">
-            
-            <div class="form-grid">
-              <div class="field">
-                <label for="name">Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Orégano, Tomate, Pollo Entero">
-              </div>
-
-              <div class="field">
-                <label for="category">Categoría</label>
-                <select id="category" required>
-                  <option value="Verduras">Verduras</option>
-                  <option value="Frutas">Frutas</option>
-                  <option value="Condimentos">Condimentos</option>
-                  <option value="Quesos">Quesos</option>
-                  <option value="Bandejas">Bandejas</option>
-                  <option value="Huevos">Huevos</option>
-                  <option value="Aceite">Aceite</option> 
-                  <option value="Miel">Miel</option>
-                  <option value="Combos">Combos</option>
-                  <option value="Mermeladas/dulces">Mermeladas/dulces</option>
-                  <option value="Especias para el mate">Especias para el mate</option>
-                  <option value="Carne Vacuna">Carne Vacuna</option>
-                  <option value="Carnes de Cerdo">Carnes de Cerdo</option>
-                  <option value="Pollo">Pollo</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="sale_unit">Unidad de Venta / Fraccionamiento</label>
-                <select id="sale_unit" required onchange="updatePriceLabel()">
-                  <option value="kg">Por Kilo (kg)</option>
-                  <option value="1g">Por Gramo (1g)</option>
-                  <option value="25g">25g</option>
-                  <option value="30g">30g</option>
-                  <option value="50g">50g</option>
-                  <option value="100g">100g</option>
-                  <option value="250g">250g</option>
-                  <option value="500g">500g</option>
-                  <option value="unidad">Por Unidad</option>
-                  <option value="docena">Por Docena</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="price" id="priceLabel">Precio por Kilo ($)</label>
-                <input id="price" type="number" step="0.01" required placeholder="Ej. 2500">
-              </div>
-
-              <div class="field">
-                <label for="icon">Icono Emoji (Fallback)</label>
-                <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀, 🍗" maxlength="4">
-              </div>
-
-              <div class="field">
-                <label for="display_order">Orden de aparición</label>
-                <input id="display_order" type="number" value="1" placeholder="Ej. 1">
-              </div>
-
-              <div class="field full">
-                <label for="image_url">URL de la Foto del Producto (Opcional)</label>
-                <input id="image_url" type="url" placeholder="https://ejemplo.com/foto.jpg">
-                <small style="color: var(--muted); font-size: 11px; margin-top: 3px;">
-                  Si pegás un enlace directo a una imagen (jpg/png), se mostrará la foto real en la tienda en lugar del emoji.
-                </small>
-              </div>
-            </div>
-
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-              <button class="btn" type="submit" id="btnSave">Guardar Producto</button>
-              <button class="btn btn-secondary" type="button" onclick="resetForm()">Cancelar</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Lista de Productos -->
-        <div class="card">
-          <h2>Productos Registrados</h2>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Imagen / Icono</th>
-                  <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Precio</th>
-                  <th>Unidad</th>
-                  <th>Orden</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="productsTableBody">
-                <tr><td colspan="7" style="text-align: center; color: var(--muted);">Cargando productos...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <script src="config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
-    let allProducts = [];
-
-    // Cambiar texto de ayuda del precio según unidad seleccionada
-    function updatePriceLabel() {
-      const unit = document.getElementById('sale_unit').value;
-      const label = document.getElementById('priceLabel');
-      
-      if (unit === 'kg') label.textContent = 'Precio por Kilo ($)';
-      else if (unit === '1g') label.textContent = 'Precio por Gramo ($)';
-      else if (unit === '25g') label.textContent = 'Precio por 25g ($)';
-      else if (unit === '30g') label.textContent = 'Precio por 30g ($)';
-      else if (unit === '50g') label.textContent = 'Precio por 50g ($)';
-      else if (unit === '100g') label.textContent = 'Precio por 100g ($)';
-      else if (unit === '250g') label.textContent = 'Precio por 250g ($)';
-      else if (unit === '500g') label.textContent = 'Precio por 500g ($)';
-      else if (unit === 'docena') label.textContent = 'Precio por Docena ($)';
-      else label.textContent = 'Precio por Unidad ($)';
-    }
-
-    // Cambiar entre pestañas/vistas
-    function switchView(viewId, element) {
-      if (element.classList.contains('disabled')) return;
-      
-      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-
-      document.getElementById(viewId).classList.add('active');
-      element.classList.add('active');
-    }
-
-    function showNotice(msg) {
-      const notice = document.getElementById('notice');
-      notice.textContent = msg;
-      notice.style.display = 'block';
-      setTimeout(() => notice.style.display = 'none', 4000);
-    }
-
-    // Cargar Lista de Productos
-    async function loadProducts() {
-      const { data, error } = await db
-        .from('products')
-        .select('*')
-        .order('display_order', { ascending: true });
-
-      if (error) {
-        alert('Error al cargar productos: ' + error.message);
-        return;
-      }
-
-      allProducts = data;
-      renderTable();
-    }
-
-    function renderTable() {
-      const tbody = document.getElementById('productsTableBody');
-      if (!allProducts.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted);">No hay productos registrados aún.</td></tr>';
-        return;
-      }
-
-      const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
-
-      tbody.innerHTML = allProducts.map(p => {
-        const visual = p.image_url 
-          ? `<img src="${p.image_url}" class="prod-img-preview" alt="${p.name}">` 
-          : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`;
-
-        return `
-          <tr>
-            <td>${visual}</td>
-            <td><b>${p.name}</b></td>
-            <td>${p.category || '-'}</td>
-            <td><b>${money(p.price_per_kg)}</b></td>
-            <td>${p.sale_unit || 'kg'}</td>
-            <td>${p.display_order || 1}</td>
-            <td>
-              <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="editProduct('${p.id}')">Editar</button>
-              <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    // Formulario: Guardar o Actualizar Producto
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const prodId = document.getElementById('prodId').value;
-      const payload = {
-        name: document.getElementById('name').value.trim(),
-        category: document.getElementById('category').value,
-        price_per_kg: parseFloat(document.getElementById('price').value),
-        sale_unit: document.getElementById('sale_unit').value,
-        icon: document.getElementById('icon').value.trim() || '🌱',
-        display_order: parseInt(document.getElementById('display_order').value) || 1,
-        image_url: document.getElementById('image_url').value.trim() || null,
-        active: true
-      };
-
-      let error;
-      if (prodId) {
-        // Editar
-        ({ error } = await db.from('products').update(payload).eq('id', prodId));
-      } else {
-        // Crear
-        ({ error } = await db.from('products').insert(payload));
-      }
-
-      if (error) {
-        alert('Ocurrió un error al guardar: ' + error.message);
-      } else {
-        showNotice(prodId ? '¡Producto actualizado correctamente!' : '¡Producto agregado al catálogo!');
-        resetForm();
-        loadProducts();
-      }
-    });
-
-    // Cargar datos en el formulario para Editar
-    function editProduct(id) {
-      const p = allProducts.find(item => item.id === id);
-      if (!p) return;
-
-      document.getElementById('prodId').value = p.id;
-      document.getElementById('name').value = p.name;
-      document.getElementById('category').value = p.category || 'Verduras';
-      document.getElementById('sale_unit').value = p.sale_unit || 'kg';
-      document.getElementById('price').value = p.price_per_kg;
-      document.getElementById('icon').value = p.icon || '';
-      document.getElementById('display_order').value = p.display_order || 1;
-      document.getElementById('image_url').value = p.image_url || '';
-
-      updatePriceLabel();
-
-      document.getElementById('formTitle').textContent = 'Editar Producto: ' + p.name;
-      document.getElementById('btnSave').textContent = 'Actualizar Producto';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Resetear formulario
-    function resetForm() {
-      document.getElementById('prodId').value = '';
-      document.getElementById('productForm').reset();
-      document.getElementById('formTitle').textContent = 'Agregar Producto';
-      document.getElementById('btnSave').textContent = 'Guardar Producto';
-      updatePriceLabel();
-    }
-
-    // Eliminar producto
-    async function deleteProduct(id, name) {
-      if (!confirm(`¿Estás seguro de que querés eliminar "${name}" del catálogo?`)) return;
-
-      const { error } = await db.from('products').delete().eq('id', id);
-      if (error) {
-        alert('Error al eliminar: ' + error.message);
-      } else {
-        showNotice(`El producto "${name}" fue eliminado.`);
-        loadProducts();
-      }
-    }
-
-    loadProducts();
-  </script>
-</body>
-</html>
-
-```
