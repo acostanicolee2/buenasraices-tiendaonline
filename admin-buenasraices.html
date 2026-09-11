@@ -55,7 +55,7 @@
     .btn-danger { background: var(--danger); color: #fff; padding: 5px 10px; font-size: 12px; }
     .btn-danger:hover { background: #bd362f; }
     .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 6px; }
-    .btn-save-item { background: #356c47; color: #fff; padding: 4px 8px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; }
+    .btn-save-item { background: #356c47; color: #fff; padding: 4px 8px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
     .btn-save-item:hover { background: #244031; }
 
     .table-responsive { overflow-x: auto; }
@@ -77,7 +77,7 @@
     .order-items-table th { font-size: 12px; background: #f3edd9; padding: 8px 10px; }
     .order-items-table td { padding: 8px 10px; font-size: 13.5px; }
 
-    .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; }
+    .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: var(--shadow); }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
     .modal-card { background: var(--paper); padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: var(--shadow); }
@@ -307,13 +307,12 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
-    // FUNCIÓN PARA EVITAR QUE ENTER RECARGUE LA PÁGINA
     function handleEnterKey(event, itemId, orderId, unitPrice, saleUnit) {
       if (event.key === 'Enter') {
         event.preventDefault();
         event.stopPropagation();
         triggerItemSave(itemId, orderId, unitPrice, saleUnit);
-        event.target.blur();
+        if (event.target) event.target.blur();
       }
     }
 
@@ -321,8 +320,8 @@
       const unitsInput = document.getElementById(`units-${itemId}`);
       const weightInput = document.getElementById(`weight-${itemId}`);
       
-      const newUnits = unitsInput ? unitsInput.value : null;
-      const newWeight = weightInput ? weightInput.value : null;
+      const newUnits = unitsInput ? unitsInput.value : 1;
+      const newWeight = weightInput ? weightInput.value : 1;
 
       updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit);
     }
@@ -536,7 +535,7 @@
                 <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                   <label style="font-size: 11px;">Cant:
                     <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
-                      style="width: 50px; padding: 3px;"
+                      style="width: 55px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
                   <label style="font-size: 11px;">Kg:
@@ -544,7 +543,7 @@
                       style="width: 65px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <button class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
+                  <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
                   ${units} un. ${isWeightBased ? `(${weight} kg)` : ''}
@@ -604,11 +603,8 @@
     }
 
     async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
-      const currentOrder = rawOrders.find(o => o.id == orderId);
-      const currentItem = currentOrder ? (currentOrder.order_items || []).find(i => i.id == itemId) : null;
-
-      let units = newUnits !== null && newUnits !== '' ? parseFloat(newUnits) : (currentItem ? currentItem.units_quantity || 1 : 1);
-      let weight = newWeight !== null && newWeight !== '' ? parseFloat(newWeight) : (currentItem ? currentItem.weight_quantity || currentItem.quantity || 1 : 1);
+      let units = parseFloat(newUnits);
+      let weight = parseFloat(newWeight);
 
       if (isNaN(units) || units < 1) units = 1;
       if (isNaN(weight) || weight < 0) weight = 0;
@@ -704,7 +700,7 @@
       });
 
       await db.from('orders').update({ total: newTotal }).eq('id', orderId);
-      showNotice('Pedido #' + orderId + ' actualizado correctamente.');
+      showNotice('Pedido #' + orderId + ' actualizado.');
       loadOrders();
     }
 
