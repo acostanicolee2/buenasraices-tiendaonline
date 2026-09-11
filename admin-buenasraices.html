@@ -100,7 +100,11 @@
 
       .card, .order-card { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 15px !important; page-break-inside: avoid; }
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
-      .print-hide-price .price-col, .print-hide-price .order-total { display: none !important; }
+      
+      /* Ocultar precios sólo cuando sea hoja de reparto */
+      .print-hide-price .price-col, 
+      .print-hide-price .order-total { display: none !important; }
+      
       .print-only { display: inline !important; }
     }
     .print-only { display: none; }
@@ -134,7 +138,7 @@
       </nav>
 
       <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.6
+        Buenas Raíces v2.7
       </div>
     </aside>
 
@@ -435,7 +439,6 @@
         return;
       }
 
-      // Agrupar los pedidos por el nombre de la zona
       const grouped = {};
       ordersList.forEach(order => {
         const zoneName = (order.zone || order.city || 'Sin Zona').trim();
@@ -468,17 +471,36 @@
 
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
-          const subtotal = item.price || 0;
+          const unitPrice = item.unit_price || 0;
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          
+          // Determinamos el subtotal según el tipo de venta
+          const isWeightBased = item.sale_unit === 'kg' || item.sale_unit === 'unidad_peso' || item.sale_unit === '1g';
+          const subtotal = item.price !== undefined && item.price !== null ? item.price : (isWeightBased ? weight * unitPrice : units * unitPrice);
           totalCalculado += subtotal;
+
           return `
             <tr>
               <td><b>${item.product_name}</b></td>
               <td>
-                <input type="number" step="0.01" value="${item.quantity || 1}" 
-                  style="width: 70px; padding: 4px;" class="no-print"
-                  onchange="updateItemQuantity('${item.id}', '${order.id}', this.value, ${item.unit_price || 0})">
-                <span class="print-only">${item.quantity || 1}</span> (${item.sale_unit || 'un'})
+                <div class="no-print" style="display: flex; gap: 8px; align-items: center;">
+                  <label style="font-size: 11px;">Cant. Unid:
+                    <input type="number" step="1" min="1" value="${units}" 
+                      style="width: 55px; padding: 3px;"
+                      onchange="updateItemValues('${item.id}', '${order.id}', this.value, null, ${unitPrice}, '${item.sale_unit}')">
+                  </label>
+                  <label style="font-size: 11px;">Peso Real (Kg/g):
+                    <input type="number" step="0.01" min="0" value="${weight}" 
+                      style="width: 75px; padding: 3px;"
+                      onchange="updateItemValues('${item.id}', '${order.id}', null, this.value, ${unitPrice}, '${item.sale_unit}')">
+                  </label>
+                </div>
+                <span class="print-only">
+                  ${units} un. ${isWeightBased ? `(${weight} kg)` : ''}
+                </span>
               </td>
+              <td class="price-col"><b>${money(unitPrice)}</b> / ${item.sale_unit || 'un'}</td>
               <td class="price-col"><b>${money(subtotal)}</b></td>
               <td class="no-print" style="text-align: right;">
                 <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}', '${order.id}')">✕</button>
@@ -487,6 +509,8 @@
           `;
         }).join('');
       }
+
+      const finalTotal = order.total !== undefined && order.total !== null ? order.total : totalCalculado;
 
       return `
         <div class="order-card" id="order-card-${order.id}">
@@ -503,18 +527,19 @@
             ${order.notes ? `<div style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
-          <h4 style="margin: 10px 0 5px; font-size: 14px;" class="price-col">Detalle de la compra:</h4>
+          <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
           <table class="order-items-table">
             <thead>
               <tr>
                 <th>Producto</th>
-                <th>Cant. / Peso Real</th>
+                <th>Cantidad / Peso Real</th>
+                <th class="price-col">Precio Unit. / Kg</th>
                 <th class="price-col">Subtotal</th>
-                <th class="no-print" style="width: 50px;"></th>
+                <th class="no-print" style="width: 40px;"></th>
               </tr>
             </thead>
             <tbody>
-              ${itemsRows || '<tr><td colspan="4">Sin productos en el pedido</td></tr>'}
+              ${itemsRows || '<tr><td colspan="5">Sin productos en el pedido</td></tr>'}
             </tbody>
           </table>
 
@@ -522,20 +547,35 @@
             <button class="btn btn-secondary btn-sm" onclick="promptAddItem('${order.id}')">+ Agregar Producto a este Pedido</button>
           </div>
 
-          <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 17px;">
-            <b>Total Ajustado: <span style="color: var(--leaf);">${money(order.total || totalCalculado)}</span></b>
+          <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 18px; border-top: 1px dashed var(--line); padding-top: 10px;">
+            <b>Total del Pedido: <span style="color: var(--leaf); font-size: 20px;">${money(finalTotal)}</span></b>
           </div>
         </div>
       `;
     }
 
-    // Actualizar Cantidad o Peso de un Ítem de Pedido
-    async function updateItemQuantity(itemId, orderId, newQty, unitPrice) {
-      const qty = parseFloat(newQty);
-      if (isNaN(qty) || qty < 0) return;
+    // Actualizar Cantidad de Unidades y/o Peso Real de un producto
+    async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
+      // Buscar el ítem actual en local para conservar valores no cambiados
+      const currentOrder = rawOrders.find(o => o.id == orderId);
+      const currentItem = currentOrder ? (currentOrder.order_items || []).find(i => i.id == itemId) : null;
 
-      const newSubtotal = qty * unitPrice;
-      await db.from('order_items').update({ quantity: qty, price: newSubtotal }).eq('id', itemId);
+      let units = newUnits !== null ? parseFloat(newUnits) : (currentItem ? currentItem.units_quantity || 1 : 1);
+      let weight = newWeight !== null ? parseFloat(newWeight) : (currentItem ? currentItem.weight_quantity || currentItem.quantity || 1 : 1);
+
+      if (isNaN(units) || units < 1) units = 1;
+      if (isNaN(weight) || weight < 0) weight = 0;
+
+      const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
+      const newSubtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
+
+      await db.from('order_items').update({ 
+        units_quantity: units,
+        weight_quantity: weight,
+        quantity: isWeightBased ? weight : units,
+        price: newSubtotal 
+      }).eq('id', itemId);
+
       await recalculateOrderTotal(orderId);
     }
 
@@ -550,16 +590,20 @@
     async function promptAddItem(orderId) {
       const prodName = prompt("Ingresá el nombre del producto a agregar:");
       if (!prodName) return;
-      const price = parseFloat(prompt("Ingresá el precio total de este ítem ($):"));
-      if (isNaN(price)) return;
-      const qty = parseFloat(prompt("Ingresá la cantidad / kilo:", "1")) || 1;
+      const unitPrice = parseFloat(prompt("Ingresá el precio unitario / por Kilo ($):"));
+      if (isNaN(unitPrice)) return;
+      const qty = parseFloat(prompt("Ingresá la cantidad o peso total (Kilos/Unidades):", "1")) || 1;
+
+      const subtotal = qty * unitPrice;
 
       await db.from('order_items').insert({
         order_id: orderId,
         product_name: prodName,
+        units_quantity: 1,
+        weight_quantity: qty,
         quantity: qty,
-        price: price,
-        unit_price: price / qty,
+        unit_price: unitPrice,
+        price: subtotal,
         sale_unit: 'unidad'
       });
 
