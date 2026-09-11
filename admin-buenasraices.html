@@ -55,6 +55,8 @@
     .btn-danger { background: var(--danger); color: #fff; padding: 5px 10px; font-size: 12px; }
     .btn-danger:hover { background: #bd362f; }
     .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 6px; }
+    .btn-save-item { background: #356c47; color: #fff; padding: 4px 8px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; }
+    .btn-save-item:hover { background: #244031; }
 
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
@@ -305,12 +307,24 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
-    function handleEnterKey(event, input) {
+    // FUNCIÓN PARA EVITAR QUE ENTER RECARGUE LA PÁGINA
+    function handleEnterKey(event, itemId, orderId, unitPrice, saleUnit) {
       if (event.key === 'Enter') {
         event.preventDefault();
         event.stopPropagation();
-        input.blur();
+        triggerItemSave(itemId, orderId, unitPrice, saleUnit);
+        event.target.blur();
       }
+    }
+
+    function triggerItemSave(itemId, orderId, unitPrice, saleUnit) {
+      const unitsInput = document.getElementById(`units-${itemId}`);
+      const weightInput = document.getElementById(`weight-${itemId}`);
+      
+      const newUnits = unitsInput ? unitsInput.value : null;
+      const newWeight = weightInput ? weightInput.value : null;
+
+      updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit);
     }
 
     function updatePriceLabel() {
@@ -519,19 +533,18 @@
             <tr class="${isMeat ? 'meat-row' : 'non-meat-row'}">
               <td><b>${item.product_name}</b> ${isMeat ? '<span style="font-size:11px; background:#f0e2b6; padding:1px 5px; border-radius:4px; font-weight:bold; color:#523a07;" class="no-print">🥩 Carnicería</span>' : ''}</td>
               <td>
-                <div class="no-print" style="display: flex; gap: 8px; align-items: center;">
-                  <label style="font-size: 11px;">Cant. Unid:
-                    <input type="number" step="1" min="1" value="${units}" 
-                      style="width: 55px; padding: 3px;"
-                      onkeydown="handleEnterKey(event, this)"
-                      onchange="updateItemValues('${item.id}', '${order.id}', this.value, null, ${unitPrice}, '${saleUnit}')">
+                <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                  <label style="font-size: 11px;">Cant:
+                    <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
+                      style="width: 50px; padding: 3px;"
+                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <label style="font-size: 11px;">Peso Real (Kg):
-                    <input type="number" step="0.01" min="0" value="${weight}" 
-                      style="width: 75px; padding: 3px;"
-                      onkeydown="handleEnterKey(event, this)"
-                      onchange="updateItemValues('${item.id}', '${order.id}', null, this.value, ${unitPrice}, '${saleUnit}')">
+                  <label style="font-size: 11px;">Kg:
+                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${weight}" 
+                      style="width: 65px; padding: 3px;"
+                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
+                  <button class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
                   ${units} un. ${isWeightBased ? `(${weight} kg)` : ''}
@@ -594,8 +607,8 @@
       const currentOrder = rawOrders.find(o => o.id == orderId);
       const currentItem = currentOrder ? (currentOrder.order_items || []).find(i => i.id == itemId) : null;
 
-      let units = newUnits !== null ? parseFloat(newUnits) : (currentItem ? currentItem.units_quantity || 1 : 1);
-      let weight = newWeight !== null ? parseFloat(newWeight) : (currentItem ? currentItem.weight_quantity || currentItem.quantity || 1 : 1);
+      let units = newUnits !== null && newUnits !== '' ? parseFloat(newUnits) : (currentItem ? currentItem.units_quantity || 1 : 1);
+      let weight = newWeight !== null && newWeight !== '' ? parseFloat(newWeight) : (currentItem ? currentItem.weight_quantity || currentItem.quantity || 1 : 1);
 
       if (isNaN(units) || units < 1) units = 1;
       if (isNaN(weight) || weight < 0) weight = 0;
@@ -603,7 +616,7 @@
       const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
       const newSubtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
 
-      await db.from('order_items').update({ 
+      const { error } = await db.from('order_items').update({ 
         units_quantity: units,
         weight_quantity: weight,
         quantity: isWeightBased ? weight : units,
@@ -611,6 +624,11 @@
         sale_unit: saleUnit,
         price: newSubtotal 
       }).eq('id', itemId);
+
+      if (error) {
+        showNotice('Error al guardar: ' + error.message);
+        return;
+      }
 
       await recalculateOrderTotal(orderId);
     }
@@ -686,7 +704,7 @@
       });
 
       await db.from('orders').update({ total: newTotal }).eq('id', orderId);
-      showNotice('Pedido #' + orderId + ' actualizado.');
+      showNotice('Pedido #' + orderId + ' actualizado correctamente.');
       loadOrders();
     }
 
@@ -695,7 +713,7 @@
 
       if (type === 'delivery') {
         document.body.classList.add('is-delivery-mode');
-        title.textContent = "Hoja de Ruta de Reparto (Carnes) — Buenas Raíces";
+        title.textContent = "Hoja de Ruta de Reparto (Carnicería) — Buenas Raíces";
         document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'table-row');
       } else {
         document.body.classList.remove('is-delivery-mode');
