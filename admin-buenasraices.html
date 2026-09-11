@@ -84,7 +84,7 @@
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
-    /* ESTILOS EXCLUSIVOS PARA MODO IMPRESIÓN / HOJA DE REPARTO */
+    /* MODO IMPRESIÓN / HOJA DE REPARTO */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
     body.is-delivery-mode .non-meat-row,
@@ -610,15 +610,13 @@
       if (isNaN(weight) || weight < 0) weight = 0;
 
       const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
-      const newSubtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
 
       const { error } = await db.from('order_items').update({ 
         units_quantity: units,
         weight_quantity: weight,
         quantity: isWeightBased ? weight : units,
         unit_price: unitPrice,
-        sale_unit: saleUnit,
-        price: newSubtotal 
+        sale_unit: saleUnit
       }).eq('id', itemId);
 
       if (error) {
@@ -670,7 +668,6 @@
       const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
 
       const isWeightBased = p.sale_unit === 'kg' || p.sale_unit === 'unidad_peso' || p.sale_unit === '1g';
-      const subtotal = isWeightBased ? weight * unitPrice : units * unitPrice;
 
       await db.from('order_items').insert({
         order_id: orderId,
@@ -679,7 +676,6 @@
         weight_quantity: weight,
         quantity: isWeightBased ? weight : units,
         unit_price: unitPrice,
-        price: subtotal,
         sale_unit: p.sale_unit,
         category: p.category
       });
@@ -689,7 +685,7 @@
     }
 
     async function recalculateOrderTotal(orderId) {
-      const { data: items } = await db.from('order_items').select('price, unit_price, weight_quantity, units_quantity, quantity, sale_unit').eq('order_id', orderId);
+      const { data: items } = await db.from('order_items').select('unit_price, weight_quantity, units_quantity, quantity, sale_unit').eq('order_id', orderId);
       
       let newTotal = 0;
       (items || []).forEach(item => {
