@@ -103,7 +103,7 @@
       </nav>
 
       <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.1
+        Buenas Raíces v2.2
       </div>
     </aside>
 
@@ -127,7 +127,7 @@
             <div class="form-grid">
               <div class="field">
                 <label for="name">Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Oregano, Tomate, Miel">
+                <input id="name" required placeholder="Ej. Orégano, Tomate, Pollo Entero">
               </div>
 
               <div class="field">
@@ -144,9 +144,9 @@
                   <option value="Combos">Combos</option>
                   <option value="Mermeladas/dulces">Mermeladas/dulces</option>
                   <option value="Especias para el mate">Especias para el mate</option>
-                    <option value="Carne Vacuna">Carne Vacuna</option>
-                  <option value="Carnes - Pollo">Carnes de Cerdo</option>
-                    <option value="Pollo">Pollo</option>
+                  <option value="Carne Vacuna">Carne Vacuna</option>
+                  <option value="Carnes de Cerdo">Carnes de Cerdo</option>
+                  <option value="Pollo">Pollo</option>
                 </select>
               </div>
 
@@ -161,7 +161,8 @@
                   <option value="100g">100g</option>
                   <option value="250g">250g</option>
                   <option value="500g">500g</option>
-                  <option value="unidad">Por Unidad</option>
+                  <option value="unidad">Por Unidad (Precio Fijo)</option>
+                  <option value="unidad_peso">Por Unidad (Precio por Kg / Peso Variable)</option>
                   <option value="docena">Por Docena</option>
                 </select>
               </div>
@@ -173,7 +174,7 @@
 
               <div class="field">
                 <label for="icon">Icono Emoji (Fallback)</label>
-                <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀" maxlength="4">
+                <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀, 🍗" maxlength="4">
               </div>
 
               <div class="field">
@@ -237,10 +238,14 @@
       
       if (unit === 'kg') label.textContent = 'Precio por Kilo ($)';
       else if (unit === '1g') label.textContent = 'Precio por Gramo ($)';
-      else if (unit === '100g') label.textContent = 'Precio por  100g ($)';
-      else if (unit === '250g') label.textContent = 'Precio por  250g ($)';
-      else if (unit === '500g') label.textContent = 'Precio por  500g ($)';
+      else if (unit === '25g') label.textContent = 'Precio por 25g ($)';
+      else if (unit === '30g') label.textContent = 'Precio por 30g ($)';
+      else if (unit === '50g') label.textContent = 'Precio por 50g ($)';
+      else if (unit === '100g') label.textContent = 'Precio por 100g ($)';
+      else if (unit === '250g') label.textContent = 'Precio por 250g ($)';
+      else if (unit === '500g') label.textContent = 'Precio por 500g ($)';
       else if (unit === 'docena') label.textContent = 'Precio por Docena ($)';
+      else if (unit === 'unidad_peso') label.textContent = 'Precio por Kilo ($) [Se vende por unidad]';
       else label.textContent = 'Precio por Unidad ($)';
     }
 
@@ -292,13 +297,16 @@
           ? `<img src="${p.image_url}" class="prod-img-preview" alt="${p.name}">` 
           : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`;
 
+        let unitText = p.sale_unit || 'kg';
+        if (unitText === 'unidad_peso') unitText = 'unidad (se cobra x kg)';
+
         return `
           <tr>
             <td>${visual}</td>
             <td><b>${p.name}</b></td>
             <td>${p.category || '-'}</td>
             <td><b>${money(p.price_per_kg)}</b></td>
-            <td>${p.sale_unit || 'kg'}</td>
+            <td>${unitText}</td>
             <td>${p.display_order || 1}</td>
             <td>
               <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="editProduct('${p.id}')">Editar</button>
