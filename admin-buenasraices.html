@@ -20,10 +20,8 @@
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--cream); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; height: 100vh; overflow: hidden; }
     
-    /* Layout principal con Menú Lateral */
     .admin-layout { display: flex; height: 100vh; }
 
-    /* Menú Lateral (Sidebar) */
     .sidebar { width: 260px; background: #1c3327; color: #fff; padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0; }
     .sidebar-brand { font-family: Georgia, serif; font-size: 22px; font-weight: bold; border-bottom: 1px solid #ffffff22; padding-bottom: 15px; }
     .sidebar-brand i { font-style: normal; color: #8eb370; }
@@ -32,18 +30,14 @@
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #d6e1d2; text-decoration: none; font-weight: 600; font-size: 14.5px; cursor: pointer; transition: 0.2s; }
     .nav-item:hover, .nav-item.active { background: var(--leaf); color: #fff; }
     .nav-item .icon { font-size: 18px; }
-    .nav-item.disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Área de Contenido */
     .main-content { flex: 1; overflow-y: auto; padding: 35px 40px; background: var(--cream); }
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
     .header-bar h1 { font-family: Georgia, serif; margin: 0; font-size: 30px; font-weight: 400; }
 
-    /* Vistas / Secciones */
     .view-section { display: none; }
     .view-section.active { display: block; }
 
-    /* Tarjetas y Formularios */
     .card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 30px; }
     .card h2 { font-family: Georgia, serif; margin: 0 0 15px; font-weight: 400; font-size: 22px; }
     
@@ -62,7 +56,6 @@
     .btn-danger:hover { background: #bd362f; }
     .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 6px; }
 
-    /* Tabla de Productos y Pedidos */
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
     th, td { padding: 12px 15px; border-bottom: 1px solid var(--line); vertical-align: middle; }
@@ -70,11 +63,9 @@
     
     .prod-img-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e5dbc4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-    /* Agrupación por Zonas */
     .zone-group { margin-bottom: 35px; }
     .zone-header { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Tarjetas de Pedidos */
     .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
     .order-title { font-weight: bold; font-size: 18px; color: var(--leaf); }
@@ -84,27 +75,29 @@
     .order-items-table th { font-size: 12px; background: #f3edd9; padding: 8px 10px; }
     .order-items-table td { padding: 8px 10px; font-size: 13.5px; }
 
-    /* Modales / Mensajes */
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; }
 
-    /* Estilos de Impresión / PDF */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
+    .modal-card { background: var(--paper); padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: var(--shadow); }
+
+    .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
+
+    /* ESTILOS EXCLUSIVOS PARA MODO IMPRESIÓN / HOJA DE REPARTO */
+    body.is-delivery-mode .price-col, 
+    body.is-delivery-mode .order-total,
+    body.is-delivery-mode .non-meat-row,
+    body.is-delivery-mode .order-date,
+    body.is-delivery-mode .extra-info { display: none !important; }
+
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
-      .sidebar, .header-bar, .notice, .btn, .no-print { display: none !important; }
+      .sidebar, .header-bar, .notice, .btn, .no-print, .modal-overlay, .footer-actions { display: none !important; }
       .main-content { padding: 0 !important; overflow: visible !important; }
-      
-      /* Salto de página entre zonas distintas */
       .zone-group { page-break-after: always; margin-bottom: 0; }
       .zone-group:last-child { page-break-after: auto; }
       .zone-header { background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 10px; }
-
       .card, .order-card { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 15px !important; page-break-inside: avoid; }
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
-      
-      /* Ocultar precios sólo cuando sea hoja de reparto */
-      .print-hide-price .price-col, 
-      .print-hide-price .order-total { display: none !important; }
-      
       .print-only { display: inline !important; }
     }
     .print-only { display: none; }
@@ -116,7 +109,6 @@
       .sidebar { width: 100%; height: auto; }
       .main-content { padding: 20px; }
       .form-grid { grid-template-columns: 1fr; }
-      .field.full { grid-column: auto; }
     }
   </style>
 </head>
@@ -124,10 +116,8 @@
 
   <div class="admin-layout">
     
-    <!-- Menú Lateral -->
     <aside class="sidebar">
       <div class="sidebar-brand">Buenas<i>raíces</i> Admin</div>
-      
       <nav class="nav-menu">
         <a class="nav-item active" onclick="switchView('productsView', this)">
           <span class="icon">🌱</span> Catálogo de Productos
@@ -136,13 +126,9 @@
           <span class="icon">📦</span> Pedidos
         </a>
       </nav>
-
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">
-        Buenas Raíces v2.7
-      </div>
+      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.0</div>
     </aside>
 
-    <!-- Área de Contenido Principal -->
     <main class="main-content">
       <div id="notice" class="notice"></div>
 
@@ -153,18 +139,15 @@
           <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
         </div>
 
-        <!-- Formulario Crear/Editar Producto -->
         <div class="card">
           <h2 id="formTitle">Agregar Producto</h2>
           <form id="productForm">
             <input type="hidden" id="prodId">
-            
             <div class="form-grid">
               <div class="field">
                 <label for="name">Nombre del Producto</label>
                 <input id="name" required placeholder="Ej. Orégano, Tomate, Pollo Entero">
               </div>
-
               <div class="field">
                 <label for="category">Categoría</label>
                 <select id="category" required>
@@ -184,7 +167,6 @@
                   <option value="Pollo">Pollo</option>
                 </select>
               </div>
-
               <div class="field">
                 <label for="sale_unit">Unidad de Venta / Fraccionamiento</label>
                 <select id="sale_unit" required onchange="updatePriceLabel()">
@@ -201,28 +183,23 @@
                   <option value="docena">Por Docena</option>
                 </select>
               </div>
-
               <div class="field">
                 <label for="price" id="priceLabel">Precio por Kilo ($)</label>
                 <input id="price" type="number" step="0.01" required placeholder="Ej. 2500">
               </div>
-
               <div class="field">
-                <label for="icon">Icono Emoji (Fallback)</label>
+                <label for="icon">Icono Emoji</label>
                 <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀, 🍗" maxlength="4">
               </div>
-
               <div class="field">
                 <label for="display_order">Orden de aparición</label>
                 <input id="display_order" type="number" value="1" placeholder="Ej. 1">
               </div>
-
               <div class="field full">
                 <label for="image_url">URL de la Foto del Producto (Opcional)</label>
                 <input id="image_url" type="url" placeholder="https://ejemplo.com/foto.jpg">
               </div>
             </div>
-
             <div style="margin-top: 20px; display: flex; gap: 10px;">
               <button class="btn" type="submit" id="btnSave">Guardar Producto</button>
               <button class="btn btn-secondary" type="button" onclick="resetForm()">Cancelar</button>
@@ -230,7 +207,6 @@
           </form>
         </div>
 
-        <!-- Lista de Productos -->
         <div class="card">
           <h2>Productos Registrados</h2>
           <div class="table-responsive">
@@ -256,7 +232,6 @@
 
       <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
       <section id="ordersView" class="view-section">
-        
         <h1 class="print-only-title" id="printReportTitle">Lista de Pedidos — Buenas Raíces</h1>
 
         <div class="header-bar no-print">
@@ -265,18 +240,58 @@
             <select id="zoneFilter" onchange="filterOrdersByZone()" style="padding: 8px 12px; font-weight: bold;">
               <option value="ALL">Todas las Zonas</option>
             </select>
-            <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar</button>
-            <button class="btn" onclick="printReport('full')">📄 PDF Pedidos Completo</button>
-            <button class="btn btn-secondary" onclick="printReport('delivery')">🚚 PDF Hoja de Reparto</button>
+            <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar Pedidos</button>
           </div>
         </div>
 
+        <!-- Contenedor de Pedidos -->
         <div id="ordersContainer">
           <p style="color: var(--muted);">Cargando pedidos...</p>
         </div>
+
+        <!-- BOTONES DE DESCARGA PDF AL FINAL -->
+        <div class="footer-actions no-print">
+          <div>
+            <h3 style="margin: 0 0 5px; font-size: 16px;">Exportar / Imprimir Lista</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí el reporte completo o la lista exclusiva de repartidor.</p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn" onclick="printReport('full')">📄 Descargar PDF Pedidos Completo</button>
+            <button class="btn btn-secondary" onclick="printReport('delivery')">🚚 Descargar PDF Hoja de Reparto</button>
+          </div>
+        </div>
+
       </section>
 
     </main>
+  </div>
+
+  <!-- Modal para Agregar Producto a un Pedido -->
+  <div id="addItemModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h3 style="margin-top:0;">Agregar Producto al Pedido</h3>
+      <input type="hidden" id="modalOrderId">
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Seleccionar Producto del Catálogo:</label>
+        <select id="modalProductSelect" onchange="onModalProductChange()"></select>
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Precio Unitario / Kg ($):</label>
+        <input id="modalUnitPrice" type="number" step="0.01">
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Cantidad (Unidades):</label>
+        <input id="modalUnits" type="number" value="1" min="1">
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Peso Real / Kilos:</label>
+        <input id="modalWeight" type="number" step="0.01" value="1">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="closeAddItemModal()">Cancelar</button>
+        <button class="btn" onclick="saveNewOrderItem()">Agregar Ítem</button>
+      </div>
+    </div>
   </div>
 
   <script src="config.js"></script>
@@ -285,6 +300,8 @@
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
     let rawOrders = [];
+
+    const MEAT_CATEGORIES = ['Pollo', 'Carne Vacuna', 'Carnes de Cerdo'];
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
@@ -393,10 +410,12 @@
       loadProducts();
     }
 
-    // --- CARGAR Y GESTIONAR PEDIDOS DIVIDIDOS POR ZONA ---
+    // --- CARGAR Y GESTIONAR PEDIDOS ---
     async function loadOrders() {
       const container = document.getElementById('ordersContainer');
       container.innerHTML = '<p style="color: var(--muted);">Cargando pedidos...</p>';
+
+      if (!allProducts.length) await loadProducts();
 
       const { data, error } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
 
@@ -468,40 +487,48 @@
       
       let totalCalculado = 0;
       let itemsRows = '';
+      let hasMeatItems = false;
 
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
-          const unitPrice = item.unit_price || 0;
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+          
+          const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
+          const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
+          const category = item.category || (catalogProd ? catalogProd.category : '');
+          
+          const isMeat = MEAT_CATEGORIES.includes(category);
+          if (isMeat) hasMeatItems = true;
+
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
           
-          // Determinamos el subtotal según el tipo de venta
-          const isWeightBased = item.sale_unit === 'kg' || item.sale_unit === 'unidad_peso' || item.sale_unit === '1g';
-          const subtotal = item.price !== undefined && item.price !== null ? item.price : (isWeightBased ? weight * unitPrice : units * unitPrice);
+          const subtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
           totalCalculado += subtotal;
 
           return `
-            <tr>
-              <td><b>${item.product_name}</b></td>
+            <tr class="${isMeat ? 'meat-row' : 'non-meat-row'}">
+              <td><b>${item.product_name}</b> ${isMeat ? '<span style="font-size:11px; background:#f0e2b6; padding:1px 5px; border-radius:4px; font-weight:bold; color:#523a07;">🥩 Carnicería</span>' : ''}</td>
               <td>
                 <div class="no-print" style="display: flex; gap: 8px; align-items: center;">
                   <label style="font-size: 11px;">Cant. Unid:
                     <input type="number" step="1" min="1" value="${units}" 
                       style="width: 55px; padding: 3px;"
-                      onchange="updateItemValues('${item.id}', '${order.id}', this.value, null, ${unitPrice}, '${item.sale_unit}')">
+                      onchange="updateItemValues('${item.id}', '${order.id}', this.value, null, ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <label style="font-size: 11px;">Peso Real (Kg/g):
+                  <label style="font-size: 11px;">Peso Real (Kg):
                     <input type="number" step="0.01" min="0" value="${weight}" 
                       style="width: 75px; padding: 3px;"
-                      onchange="updateItemValues('${item.id}', '${order.id}', null, this.value, ${unitPrice}, '${item.sale_unit}')">
+                      onchange="updateItemValues('${item.id}', '${order.id}', null, this.value, ${unitPrice}, '${saleUnit}')">
                   </label>
                 </div>
                 <span class="print-only">
                   ${units} un. ${isWeightBased ? `(${weight} kg)` : ''}
                 </span>
               </td>
-              <td class="price-col"><b>${money(unitPrice)}</b> / ${item.sale_unit || 'un'}</td>
-              <td class="price-col"><b>${money(subtotal)}</b></td>
+              <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
+              <td class="price-col"><b style="color: var(--leaf);">${money(subtotal)}</b></td>
               <td class="no-print" style="text-align: right;">
                 <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}', '${order.id}')">✕</button>
               </td>
@@ -509,8 +536,6 @@
           `;
         }).join('');
       }
-
-      const finalTotal = order.total !== undefined && order.total !== null ? order.total : totalCalculado;
 
       return `
         <div class="order-card" id="order-card-${order.id}">
@@ -520,11 +545,11 @@
           </div>
 
           <div class="order-info">
-            <div><b>Cliente:</b> ${order.customer_name || 'Sin nombre'}</div>
+            <div><b>Nombre:</b> ${order.customer_name || 'Sin nombre'}</div>
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
             <div><b>Dirección:</b> ${order.address || 'Retira en local'} (${order.city || 'N/A'})</div>
             <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
-            ${order.notes ? `<div style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+            ${order.notes ? `<div class="extra-info" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
           <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
@@ -544,19 +569,17 @@
           </table>
 
           <div class="no-print" style="margin-top: 10px;">
-            <button class="btn btn-secondary btn-sm" onclick="promptAddItem('${order.id}')">+ Agregar Producto a este Pedido</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAddItemModal('${order.id}')">+ Agregar Producto a este Pedido</button>
           </div>
 
           <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 18px; border-top: 1px dashed var(--line); padding-top: 10px;">
-            <b>Total del Pedido: <span style="color: var(--leaf); font-size: 20px;">${money(finalTotal)}</span></b>
+            <b>Total del Pedido: <span style="color: var(--leaf); font-size: 20px;">${money(totalCalculado)}</span></b>
           </div>
         </div>
       `;
     }
 
-    // Actualizar Cantidad de Unidades y/o Peso Real de un producto
     async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
-      // Buscar el ítem actual en local para conservar valores no cambiados
       const currentOrder = rawOrders.find(o => o.id == orderId);
       const currentItem = currentOrder ? (currentOrder.order_items || []).find(i => i.id == itemId) : null;
 
@@ -573,67 +596,106 @@
         units_quantity: units,
         weight_quantity: weight,
         quantity: isWeightBased ? weight : units,
+        unit_price: unitPrice,
+        sale_unit: saleUnit,
         price: newSubtotal 
       }).eq('id', itemId);
 
       await recalculateOrderTotal(orderId);
     }
 
-    // Eliminar Ítem del Pedido
     async function deleteOrderItem(itemId, orderId) {
       if (!confirm('¿Quitar este producto del pedido?')) return;
       await db.from('order_items').delete().eq('id', itemId);
       await recalculateOrderTotal(orderId);
     }
 
-    // Agregar Producto Manualmente a un Pedido Existente
-    async function promptAddItem(orderId) {
-      const prodName = prompt("Ingresá el nombre del producto a agregar:");
-      if (!prodName) return;
-      const unitPrice = parseFloat(prompt("Ingresá el precio unitario / por Kilo ($):"));
-      if (isNaN(unitPrice)) return;
-      const qty = parseFloat(prompt("Ingresá la cantidad o peso total (Kilos/Unidades):", "1")) || 1;
+    function openAddItemModal(orderId) {
+      document.getElementById('modalOrderId').value = orderId;
+      const select = document.getElementById('modalProductSelect');
+      
+      select.innerHTML = allProducts.map(p => `
+        <option value="${p.id}">${p.name} - ${money(p.price_per_kg)} / ${p.sale_unit}</option>
+      `).join('');
 
-      const subtotal = qty * unitPrice;
+      document.getElementById('addItemModal').style.display = 'flex';
+      onModalProductChange();
+    }
+
+    function onModalProductChange() {
+      const prodId = document.getElementById('modalProductSelect').value;
+      const p = allProducts.find(item => item.id === prodId);
+      if (p) {
+        document.getElementById('modalUnitPrice').value = p.price_per_kg;
+      }
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').style.display = 'none';
+    }
+
+    async function saveNewOrderItem() {
+      const orderId = document.getElementById('modalOrderId').value;
+      const prodId = document.getElementById('modalProductSelect').value;
+      const p = allProducts.find(item => item.id === prodId);
+      if (!p) return;
+
+      const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || p.price_per_kg;
+      const units = parseFloat(document.getElementById('modalUnits').value) || 1;
+      const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
+
+      const isWeightBased = p.sale_unit === 'kg' || p.sale_unit === 'unidad_peso' || p.sale_unit === '1g';
+      const subtotal = isWeightBased ? weight * unitPrice : units * unitPrice;
 
       await db.from('order_items').insert({
         order_id: orderId,
-        product_name: prodName,
-        units_quantity: 1,
-        weight_quantity: qty,
-        quantity: qty,
+        product_name: p.name,
+        units_quantity: units,
+        weight_quantity: weight,
+        quantity: isWeightBased ? weight : units,
         unit_price: unitPrice,
         price: subtotal,
-        sale_unit: 'unidad'
+        sale_unit: p.sale_unit,
+        category: p.category
       });
 
+      closeAddItemModal();
       await recalculateOrderTotal(orderId);
     }
 
-    // Recalcular y Actualizar Total Global del Pedido
     async function recalculateOrderTotal(orderId) {
-      const { data: items } = await db.from('order_items').select('price').eq('order_id', orderId);
-      const newTotal = (items || []).reduce((sum, item) => sum + (item.price || 0), 0);
+      const { data: items } = await db.from('order_items').select('price, unit_price, weight_quantity, units_quantity, quantity, sale_unit').eq('order_id', orderId);
+      
+      let newTotal = 0;
+      (items || []).forEach(item => {
+        const isWeightBased = item.sale_unit === 'kg' || item.sale_unit === 'unidad_peso' || item.sale_unit === '1g';
+        const w = item.weight_quantity !== null && item.weight_quantity !== undefined ? item.weight_quantity : (item.quantity || 1);
+        const u = item.units_quantity || 1;
+        newTotal += isWeightBased ? (w * (item.unit_price || 0)) : (u * (item.unit_price || 0));
+      });
 
       await db.from('orders').update({ total: newTotal }).eq('id', orderId);
-      showNotice('Pedido #' + orderId + ' actualizado correctamente.');
+      showNotice('Pedido #' + orderId + ' actualizado.');
       loadOrders();
     }
 
-    // --- IMPRESIÓN Y GENERACIÓN DE PDF ---
     function printReport(type) {
-      const container = document.getElementById('ordersContainer');
       const title = document.getElementById('printReportTitle');
 
       if (type === 'delivery') {
-        container.classList.add('print-hide-price');
-        title.textContent = "Hoja de Ruta y Reparto — Buenas Raíces";
+        document.body.classList.add('is-delivery-mode');
+        title.textContent = "Hoja de Ruta de Reparto (Carnes) — Buenas Raíces";
       } else {
-        container.classList.remove('print-hide-price');
+        document.body.classList.remove('is-delivery-mode');
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
       }
 
       window.print();
+      
+      // Restaurar el diseño original después de lanzar el cuadro de impresión
+      setTimeout(() => {
+        document.body.classList.remove('is-delivery-mode');
+      }, 1000);
     }
 
     loadProducts();
