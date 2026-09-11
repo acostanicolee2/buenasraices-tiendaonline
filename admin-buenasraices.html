@@ -61,13 +61,23 @@
     .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; }
     .btn-danger:hover { background: #bd362f; }
 
-    /* Tabla de Productos */
+    /* Tabla de Productos y Pedidos */
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
     th, td { padding: 12px 15px; border-bottom: 1px solid var(--line); vertical-align: middle; }
     th { background: #f0e7d3; font-weight: 700; color: var(--ink); }
     
     .prod-img-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e5dbc4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+    /* Tarjetas de Pedidos */
+    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
+    .order-title { font-weight: bold; font-size: 18px; color: var(--leaf); }
+    .order-date { font-size: 12px; color: var(--muted); }
+    .order-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px; font-size: 14px; }
+    .order-items-list { background: #fdfbf7; border: 1px solid var(--line); border-radius: 8px; padding: 12px 15px; list-style: none; margin: 0; }
+    .order-items-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
+    .order-items-list li:last-child { border-bottom: none; }
 
     /* Modales / Mensajes */
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; }
@@ -94,8 +104,8 @@
         <a class="nav-item active" onclick="switchView('productsView', this)">
           <span class="icon">🌱</span> Catálogo de Productos
         </a>
-        <a class="nav-item disabled" title="Próximamente">
-          <span class="icon">📦</span> Pedidos <small style="font-size: 10px; background: #ffffff22; padding: 2px 6px; border-radius: 4px; margin-left: auto;">Próximamente</small>
+        <a class="nav-item" onclick="switchView('ordersView', this)">
+          <span class="icon">📦</span> Pedidos
         </a>
         <a class="nav-item disabled" title="Próximamente">
           <span class="icon">📊</span> Estadísticas <small style="font-size: 10px; background: #ffffff22; padding: 2px 6px; border-radius: 4px; margin-left: auto;">Próximamente</small>
@@ -222,6 +232,18 @@
         </div>
       </section>
 
+      <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
+      <section id="ordersView" class="view-section">
+        <div class="header-bar">
+          <h1>Pedidos Realizados</h1>
+          <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar Lista</button>
+        </div>
+
+        <div id="ordersContainer">
+          <p style="color: var(--muted);">Cargando pedidos...</p>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -230,6 +252,8 @@
   <script>
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
+
+    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
     // Cambiar texto de ayuda del precio según unidad seleccionada
     function updatePriceLabel() {
@@ -258,6 +282,10 @@
 
       document.getElementById(viewId).classList.add('active');
       element.classList.add('active');
+
+      if (viewId === 'ordersView') {
+        loadOrders();
+      }
     }
 
     function showNotice(msg) {
@@ -289,8 +317,6 @@
         tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted);">No hay productos registrados aún.</td></tr>';
         return;
       }
-
-      const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
       tbody.innerHTML = allProducts.map(p => {
         const visual = p.image_url 
@@ -392,6 +418,77 @@
         showNotice(`El producto "${name}" fue eliminado.`);
         loadProducts();
       }
+    }
+
+    // --- CARGAR Y RENDERIZAR PEDIDOS ---
+    async function loadOrders() {
+      const container = document.getElementById('ordersContainer');
+      container.innerHTML = '<p style="color: var(--muted);">Cargando pedidos...</p>';
+
+      const { data: orders, error } = await db
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error al cargar pedidos:', error);
+        container.innerHTML = '<p style="color: var(--danger);">Error al cargar los pedidos: ' + error.message + '</p>';
+        return;
+      }
+
+      if (!orders || orders.length === 0) {
+        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos registrados todavía.</p></div>';
+        return;
+      }
+
+      container.innerHTML = orders.map(order => {
+        const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
+        
+        let itemsHtml = '<li>Sin detalles de productos</li>';
+        let totalCalculado = 0;
+
+        if (order.order_items && order.order_items.length > 0) {
+          itemsHtml = order.order_items.map(item => {
+            const subtotal = item.price || 0;
+            totalCalculado += subtotal;
+            return `
+              <li>
+                <span><b>${item.quantity || 1}x</b> ${item.product_name || 'Producto'} <small style="color: var(--muted);">(${item.sale_unit || 'unidad'})</small></span>
+                <b>${money(subtotal)}</b>
+              </li>
+            `;
+          }).join('');
+        }
+
+        return `
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-title">Pedido #${order.id}</span>
+              <span class="order-date">${orderDate}</span>
+            </div>
+
+            <div class="order-info">
+              <div><b>Cliente:</b> ${order.customer_name || 'Sin nombre'}</div>
+              <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+              <div><b>Dirección:</b> ${order.address || 'Retira / N/A'} ${order.city ? `(${order.city})` : ''}</div>
+              ${order.zone ? `<div><b>Zona:</b> ${order.zone}</div>` : ''}
+              ${order.notes ? `<div style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+            </div>
+
+            <h4 style="margin: 10px 0 8px; font-size: 14px;">Detalle de la compra:</h4>
+            <ul class="order-items-list">
+              ${itemsHtml}
+            </ul>
+
+            <div style="text-align: right; margin-top: 12px; font-size: 16px;">
+              <b>Total del Pedido: <span style="color: var(--leaf);">${money(order.total || totalCalculado)}</span></b>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     loadProducts();
