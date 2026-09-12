@@ -84,9 +84,11 @@
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
+    /* OCULTAR PRECIOS Y TOTAL EN PANTALLA Y EN IMPRESIÓN/PDF */
+    .price-col, 
+    .order-total { display: none !important; }
+
     /* MODO REPARTO */
-    body.is-delivery-mode .price-col, 
-    body.is-delivery-mode .order-total,
     body.is-delivery-mode .extra-info,
     body.is-delivery-mode .order-info-notes { display: none !important; }
 
