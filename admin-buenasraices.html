@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -68,7 +69,7 @@
     .zone-group { margin-bottom: 35px; }
     .zone-header { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); page-break-inside: avoid; break-inside: avoid; }
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
     .order-title { font-weight: bold; font-size: 18px; color: var(--leaf); }
     .order-date { font-size: 12px; color: var(--muted); }
@@ -87,22 +88,26 @@
     /* CONFIGURACIÓN MODO REPARTO */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
-    body.is-delivery-mode .extra-info,
-    body.is-delivery-mode .non-butcher-item { display: none !important; }
+    body.is-delivery-mode .extra-info { display: none !important; }
 
+    /* Evita la división errónea de tarjetas */
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
       .sidebar, .header-bar, .notice, .btn, .no-print, .modal-overlay, .footer-actions { display: none !important; }
       .main-content { padding: 0 !important; overflow: visible !important; }
-      .zone-group { page-break-after: always; margin-bottom: 0; }
-      .zone-group:last-child { page-break-after: auto; }
+      .zone-group { page-break-after: auto; margin-bottom: 20px; }
       .zone-header { background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 10px; }
-      .card, .order-card { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 15px !important; page-break-inside: avoid; }
+      
+      .order-card { 
+        box-shadow: none !important; 
+        border: 1px solid #ccc !important; 
+        margin-bottom: 15px !important; 
+        page-break-inside: avoid !important; 
+        break-inside: avoid !important;
+      }
+      
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
       .print-only { display: inline !important; }
-      
-      /* Ocultamos el ID del pedido y la fecha al imprimir */
-      .order-header { display: none !important; }
     }
     .print-only { display: none; }
     .print-only-title { display: none; }
@@ -236,7 +241,7 @@
 
       <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
       <section id="ordersView" class="view-section">
-        <h1 class="print-only-title" id="printReportTitle">Hoja de reparto Buenas Raíces</h1>
+        <h1 class="print-only-title" id="printReportTitle">Lista Completa de Pedidos — Buenas Raíces</h1>
 
         <div class="header-bar no-print">
           <h1>Pedidos Realizados</h1>
@@ -461,27 +466,12 @@
       select.value = current;
     }
 
-    function isButcherOrder(order) {
-      if (!order.order_items || order.order_items.length === 0) return false;
-      const butcherCategories = ['carne vacuna', 'carnes de cerdo', 'pollo'];
-      
-      return order.order_items.some(item => {
-        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
-        const cat = (item.category || (catalogProd ? catalogProd.category : '') || '').toLowerCase().trim();
-        return butcherCategories.includes(cat);
-      });
-    }
-
     function filterOrdersByZone() {
       const selectedZone = document.getElementById('zoneFilter').value;
       let filtered = rawOrders;
 
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
-      }
-
-      if (document.body.classList.contains('is-delivery-mode')) {
-        filtered = filtered.filter(order => isButcherOrder(order));
       }
 
       renderOrdersGroupedByZone(filtered);
@@ -524,15 +514,10 @@
       let totalCalculado = 0;
       let itemsRows = '';
 
-      const butcherCategories = ['carne vacuna', 'carnes de cerdo', 'pollo'];
-
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
           let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
           
-          const category = (item.category || (catalogProd ? catalogProd.category : '') || '').toLowerCase().trim();
-          const isButcher = butcherCategories.includes(category);
-
           const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
           const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
           
@@ -544,7 +529,7 @@
           totalCalculado += subtotal;
 
           return `
-            <tr class="${!isButcher ? 'non-butcher-item' : ''}">
+            <tr>
               <td><b>${item.product_name}</b></td>
               <td>
                 <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
@@ -576,7 +561,7 @@
 
       return `
         <div class="order-card" id="order-card-${order.id}">
-          <div class="order-header">
+          <div class="order-header no-print">
             <span class="order-title">Pedido #${order.id}</span>
             <span class="order-date">${orderDate}</span>
           </div>
@@ -726,14 +711,11 @@
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
       }
 
-      filterOrdersByZone();
-
       setTimeout(() => {
         window.print();
         
         setTimeout(() => {
           document.body.classList.remove('is-delivery-mode');
-          filterOrdersByZone();
         }, 500);
       }, 100);
     }
