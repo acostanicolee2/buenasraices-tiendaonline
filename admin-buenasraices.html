@@ -84,10 +84,9 @@
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
-    /* MODO IMPRESIÓN / HOJA DE REPARTO */
+    /* CONFIGURACIÓN MODO REPARTO / IMPRESIÓN */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
-    body.is-delivery-mode .non-meat-row,
     body.is-delivery-mode .order-date,
     body.is-delivery-mode .order-header,
     body.is-delivery-mode .extra-info { display: none !important; }
@@ -235,7 +234,7 @@
 
       <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
       <section id="ordersView" class="view-section">
-        <h1 class="print-only-title" id="printReportTitle">Lista de Pedidos — Buenas Raíces</h1>
+        <h1 class="print-only-title" id="printReportTitle">Hoja de reparto Buenas Raíces</h1>
 
         <div class="header-bar no-print">
           <h1>Pedidos Realizados</h1>
@@ -247,7 +246,7 @@
           </div>
         </div>
 
-        <!-- Contenedor de Pedidos -->
+        <!-- Contenedor Único de Pedidos -->
         <div id="ordersContainer">
           <p style="color: var(--muted);">Cargando pedidos...</p>
         </div>
@@ -256,7 +255,7 @@
         <div class="footer-actions no-print">
           <div>
             <h3 style="margin: 0 0 5px; font-size: 16px;">Exportar / Imprimir Lista</h3>
-            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí el reporte completo o la lista exclusiva de repartidor.</p>
+            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí el reporte completo o la hoja exclusiva de reparto.</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn" onclick="printReport('full')">📄 Descargar PDF Pedidos Completo</button>
@@ -303,8 +302,6 @@
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
     let rawOrders = [];
-
-    const MEAT_CATEGORIES = ['Pollo', 'Carne Vacuna', 'Carnes de Cerdo'];
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
@@ -493,7 +490,7 @@
         html += `
           <div class="zone-group">
             <div class="zone-header">
-              <span>📍 Zona: ${zone}</span>
+              <span>Zona: ${zone}</span>
               <span style="font-size: 14px; font-weight: normal;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
             </div>
             ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
@@ -509,7 +506,6 @@
       
       let totalCalculado = 0;
       let itemsRows = '';
-      let meatCount = 0;
 
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
@@ -517,11 +513,7 @@
           
           const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
           const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
-          const category = item.category || (catalogProd ? catalogProd.category : '');
           
-          const isMeat = MEAT_CATEGORIES.includes(category);
-          if (isMeat) meatCount++;
-
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
           const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
@@ -530,8 +522,8 @@
           totalCalculado += subtotal;
 
           return `
-            <tr class="${isMeat ? 'meat-row' : 'non-meat-row'}">
-              <td><b>${item.product_name}</b> ${isMeat ? '<span style="font-size:11px; background:#f0e2b6; padding:1px 5px; border-radius:4px; font-weight:bold; color:#523a07;" class="no-print">🥩 Carnicería</span>' : ''}</td>
+            <tr>
+              <td><b>${item.product_name}</b></td>
               <td>
                 <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                   <label style="font-size: 11px;">Cant:
@@ -547,7 +539,7 @@
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  ${units} un. ${isWeightBased ? `(${weight} kg)` : ''}
+                  ${units} un. (${weight} kg)
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -570,7 +562,7 @@
           <div class="order-info">
             <div><b>Nombre:</b> ${order.customer_name || 'Sin nombre'}</div>
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-            <div><b>Dirección:</b> ${order.address || 'Retira en local'} (${order.city || 'N/A'})</div>
+            <div><b>Dirección:</b> ${order.address || 'Retira en local'}</div>
             <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
             ${order.notes ? `<div class="extra-info" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
@@ -588,7 +580,6 @@
             </thead>
             <tbody>
               ${itemsRows || '<tr><td colspan="5">Sin productos en el pedido</td></tr>'}
-              ${meatCount === 0 ? '<tr class="meat-only-empty" style="display:none;"><td colspan="2" style="font-style:italic; color:var(--muted);">Sin carnes asignadas a este pedido</td></tr>' : ''}
             </tbody>
           </table>
 
@@ -707,18 +698,15 @@
       if (type === 'delivery') {
         document.body.classList.add('is-delivery-mode');
         title.textContent = "Hoja de reparto Buenas Raíces";
-        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'table-row');
       } else {
         document.body.classList.remove('is-delivery-mode');
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
-        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'none');
       }
 
       window.print();
       
       setTimeout(() => {
         document.body.classList.remove('is-delivery-mode');
-        document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'none');
       }, 1000);
     }
 
