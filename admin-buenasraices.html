@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -460,15 +461,31 @@
       select.value = current;
     }
 
+    // Función auxiliar para saber si un pedido contiene carnes o pollo
+    function isButcherOrder(order) {
+      if (!order.order_items || order.order_items.length === 0) return false;
+      const butcherCategories = ['carne vacuna', 'carnes de cerdo', 'pollo'];
+      
+      return order.order_items.some(item => {
+        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+        const cat = (item.category || (catalogProd ? catalogProd.category : '') || '').toLowerCase().trim();
+        return butcherCategories.includes(cat);
+      });
+    }
+
     function filterOrdersByZone() {
       const selectedZone = document.getElementById('zoneFilter').value;
       let filtered = rawOrders;
 
+      // 1. Filtrar por zona seleccionada
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
       }
-      // Si querés ocultar SIEMPRE los vacíos, descomentá la línea de abajo:
-      // filtered = filtered.filter(o => o.order_items && o.order_items.length > 0);
+
+      // 2. Si estamos en Modo Reparto, descartamos automáticamente los pedidos sin carnes
+      if (document.body.classList.contains('is-delivery-mode')) {
+        filtered = filtered.filter(order => isButcherOrder(order));
+      }
 
       renderOrdersGroupedByZone(filtered);
     }
@@ -711,11 +728,19 @@
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
       }
 
-      window.print();
-      
+      // Re-renderizar para aplicar el filtro de pedidos sin carnes en la Hoja de Reparto
+      filterOrdersByZone();
+
+      // Pequeño retardo para asegurar que el DOM esté renderizado antes de enviar a imprimir
       setTimeout(() => {
-        document.body.classList.remove('is-delivery-mode');
-      }, 1000);
+        window.print();
+        
+        // Al terminar, restaurar la vista normal
+        setTimeout(() => {
+          document.body.classList.remove('is-delivery-mode');
+          filterOrdersByZone();
+        }, 500);
+      }, 100);
     }
 
     loadProducts();
