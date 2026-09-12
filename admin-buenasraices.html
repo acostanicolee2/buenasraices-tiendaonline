@@ -89,7 +89,8 @@
     body.is-delivery-mode .order-total,
     body.is-delivery-mode .order-date,
     body.is-delivery-mode .order-header,
-    body.is-delivery-mode .extra-info { display: none !important; }
+    body.is-delivery-mode .extra-info,
+    body.is-delivery-mode .non-butcher-item { display: none !important; }
 
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
@@ -507,10 +508,15 @@
       let totalCalculado = 0;
       let itemsRows = '';
 
+      const butcherCategories = ['carne vacuna', 'carnes de cerdo', 'pollo'];
+
       if (order.order_items && order.order_items.length > 0) {
         itemsRows = order.order_items.map(item => {
           let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
           
+          const category = (item.category || (catalogProd ? catalogProd.category : '') || '').toLowerCase().trim();
+          const isButcher = butcherCategories.includes(category);
+
           const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
           const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
           
@@ -522,7 +528,7 @@
           totalCalculado += subtotal;
 
           return `
-            <tr>
+            <tr class="${!isButcher ? 'non-butcher-item' : ''}">
               <td><b>${item.product_name}</b></td>
               <td>
                 <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
@@ -560,7 +566,7 @@
           </div>
 
           <div class="order-info">
-            <div><b>Nombre:</b> ${order.customer_name || 'Sin nombre'}</div>
+            <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
             <div><b>Dirección:</b> ${order.address || 'Retira en local'}</div>
             <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
