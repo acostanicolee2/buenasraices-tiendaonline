@@ -87,7 +87,8 @@
     /* MODO REPARTO */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
-    body.is-delivery-mode .extra-info { display: none !important; }
+    body.is-delivery-mode .extra-info,
+    body.is-delivery-mode .order-info-notes { display: none !important; }
 
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
@@ -310,6 +311,21 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
+    function isButcherCategory(catName) {
+      if (!catName) return false;
+      const c = catName.toLowerCase().trim();
+      return c === 'carne vacuna' || c === 'carnes de cerdo' || c === 'pollo';
+    }
+
+    function isButcherOrder(order) {
+      if (!order.order_items || order.order_items.length === 0) return false;
+      return order.order_items.some(item => {
+        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+        const cat = item.category || (catalogProd ? catalogProd.category : '') || '';
+        return isButcherCategory(cat);
+      });
+    }
+
     function handleEnterKey(event, itemId, orderId, unitPrice, saleUnit) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -470,8 +486,14 @@
       const selectedZone = document.getElementById('zoneFilter').value;
       let filtered = rawOrders;
 
+      // 1. Filtrar por zona seleccionada
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+      }
+
+      // 2. Si es Hoja de Reparto, OMITIR automáticamente los pedidos sin carnes
+      if (document.body.classList.contains('is-delivery-mode')) {
+        filtered = filtered.filter(order => isButcherOrder(order));
       }
 
       renderOrdersGroupedByZone(filtered);
@@ -510,12 +532,22 @@
 
     function renderSingleOrderCard(order) {
       const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
-      
+      const isDeliveryMode = document.body.classList.contains('is-delivery-mode');
+
       let totalCalculado = 0;
       let itemsRows = '';
 
       if (order.order_items && order.order_items.length > 0) {
-        itemsRows = order.order_items.map(item => {
+        // En modo reparto, mostramos únicamente los productos de carnicería/pollo
+        const itemsToRender = isDeliveryMode 
+          ? order.order_items.filter(item => {
+              let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+              const cat = item.category || (catalogProd ? catalogProd.category : '') || '';
+              return isButcherCategory(cat);
+            })
+          : order.order_items;
+
+        itemsRows = itemsToRender.map(item => {
           let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
           
           const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
@@ -572,7 +604,7 @@
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
             <div><b>Dirección:</b> ${order.address || 'Retira en local'}</div>
             <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
-            ${order.notes ? `<div class="extra-info" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+            ${order.notes ? `<div class="order-info-notes extra-info" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
           <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
@@ -711,11 +743,14 @@
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
       }
 
+      filterOrdersByZone();
+
       setTimeout(() => {
         window.print();
         
         setTimeout(() => {
           document.body.classList.remove('is-delivery-mode');
+          filterOrdersByZone();
         }, 500);
       }, 100);
     }
