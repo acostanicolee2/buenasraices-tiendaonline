@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -85,11 +84,9 @@
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
-    /* CONFIGURACIÓN MODO REPARTO / IMPRESIÓN */
+    /* CONFIGURACIÓN MODO REPARTO */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
-    body.is-delivery-mode .order-date,
-    body.is-delivery-mode .order-header,
     body.is-delivery-mode .extra-info,
     body.is-delivery-mode .non-butcher-item { display: none !important; }
 
@@ -103,6 +100,9 @@
       .card, .order-card { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 15px !important; page-break-inside: avoid; }
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
       .print-only { display: inline !important; }
+      
+      /* Ocultamos el ID del pedido y la fecha al imprimir */
+      .order-header { display: none !important; }
     }
     .print-only { display: none; }
     .print-only-title { display: none; }
@@ -461,7 +461,6 @@
       select.value = current;
     }
 
-    // Función auxiliar para saber si un pedido contiene carnes o pollo
     function isButcherOrder(order) {
       if (!order.order_items || order.order_items.length === 0) return false;
       const butcherCategories = ['carne vacuna', 'carnes de cerdo', 'pollo'];
@@ -477,12 +476,10 @@
       const selectedZone = document.getElementById('zoneFilter').value;
       let filtered = rawOrders;
 
-      // 1. Filtrar por zona seleccionada
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
       }
 
-      // 2. Si estamos en Modo Reparto, descartamos automáticamente los pedidos sin carnes
       if (document.body.classList.contains('is-delivery-mode')) {
         filtered = filtered.filter(order => isButcherOrder(order));
       }
@@ -584,6 +581,7 @@
             <span class="order-date">${orderDate}</span>
           </div>
 
+          <!-- UNICA SECCION DE DATOS DEL CLIENTE -->
           <div class="order-info">
             <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
@@ -728,14 +726,11 @@
         title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
       }
 
-      // Re-renderizar para aplicar el filtro de pedidos sin carnes en la Hoja de Reparto
       filterOrdersByZone();
 
-      // Pequeño retardo para asegurar que el DOM esté renderizado antes de enviar a imprimir
       setTimeout(() => {
         window.print();
         
-        // Al terminar, restaurar la vista normal
         setTimeout(() => {
           document.body.classList.remove('is-delivery-mode');
           filterOrdersByZone();
