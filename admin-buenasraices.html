@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -85,12 +84,11 @@
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
-    /* CONFIGURACIÓN MODO REPARTO */
+    /* MODO REPARTO */
     body.is-delivery-mode .price-col, 
     body.is-delivery-mode .order-total,
     body.is-delivery-mode .extra-info { display: none !important; }
 
-    /* Evita la división errónea de tarjetas */
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
       .sidebar, .header-bar, .notice, .btn, .no-print, .modal-overlay, .footer-actions { display: none !important; }
@@ -450,7 +448,9 @@
         return;
       }
 
-      rawOrders = data || [];
+      // FILTRAR PEDIDOS VACÍOS O REPETIDOS SIN PRODUCTOS
+      rawOrders = (data || []).filter(order => order.order_items && order.order_items.length > 0);
+      
       populateZoneFilter();
       filterOrdersByZone();
     }
@@ -587,7 +587,7 @@
               </tr>
             </thead>
             <tbody>
-              ${itemsRows || '<tr><td colspan="5">Sin productos en el pedido</td></tr>'}
+              ${itemsRows}
             </tbody>
           </table>
 
