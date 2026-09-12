@@ -89,6 +89,7 @@
     body.is-delivery-mode .order-total,
     body.is-delivery-mode .non-meat-row,
     body.is-delivery-mode .order-date,
+    body.is-delivery-mode .order-header,
     body.is-delivery-mode .extra-info { display: none !important; }
 
     @media print {
@@ -493,7 +494,7 @@
           <div class="zone-group">
             <div class="zone-header">
               <span>📍 Zona: ${zone}</span>
-              <span style="font-size: 14px; font-weight: normal;">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
+              <span style="font-size: 14px; font-weight: normal;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
             </div>
             ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
           </div>
@@ -705,7 +706,7 @@
 
       if (type === 'delivery') {
         document.body.classList.add('is-delivery-mode');
-        title.textContent = "Hoja de Ruta de Reparto (Carnicería) — Buenas Raíces";
+        title.textContent = "Hoja de reparto Buenas Raíces";
         document.querySelectorAll('.meat-only-empty').forEach(el => el.style.display = 'table-row');
       } else {
         document.body.classList.remove('is-delivery-mode');
