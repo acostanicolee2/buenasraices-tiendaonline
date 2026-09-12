@@ -467,6 +467,8 @@
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
       }
+      // Si querés ocultar SIEMPRE los vacíos, descomentá la línea de abajo:
+      // filtered = filtered.filter(o => o.order_items && o.order_items.length > 0);
 
       renderOrdersGroupedByZone(filtered);
     }
