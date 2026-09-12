@@ -88,8 +88,7 @@
     .price-col, 
     .order-total { display: none !important; }
 
-    /* MODO REPARTO */
-    body.is-delivery-mode .extra-info,
+    /* MODO REPARTO: Solo ocultar notas secundarias pero MANTENER siempre visible la Dirección */
     body.is-delivery-mode .order-info-notes { display: none !important; }
 
     @media print {
@@ -466,7 +465,6 @@
         return;
       }
 
-      // FILTRAR PEDIDOS VACÍOS O REPETIDOS SIN PRODUCTOS
       rawOrders = (data || []).filter(order => order.order_items && order.order_items.length > 0);
       
       populateZoneFilter();
@@ -488,14 +486,8 @@
       const selectedZone = document.getElementById('zoneFilter').value;
       let filtered = rawOrders;
 
-      // 1. Filtrar por zona seleccionada
       if (selectedZone !== 'ALL') {
         filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
-      }
-
-      // 2. Si es Hoja de Reparto, OMITIR automáticamente los pedidos sin carnes
-      if (document.body.classList.contains('is-delivery-mode')) {
-        filtered = filtered.filter(order => isButcherOrder(order));
       }
 
       renderOrdersGroupedByZone(filtered);
@@ -540,7 +532,6 @@
       let itemsRows = '';
 
       if (order.order_items && order.order_items.length > 0) {
-        // En modo reparto, mostramos únicamente los productos de carnicería/pollo
         const itemsToRender = isDeliveryMode 
           ? order.order_items.filter(item => {
               let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
@@ -593,6 +584,9 @@
         }).join('');
       }
 
+      // Direccion explícita y siempre visible
+      const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
+
       return `
         <div class="order-card" id="order-card-${order.id}">
           <div class="order-header no-print">
@@ -600,13 +594,12 @@
             <span class="order-date">${orderDate}</span>
           </div>
 
-          <!-- UNICA SECCION DE DATOS DEL CLIENTE -->
           <div class="order-info">
             <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
             <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-            <div><b>Dirección:</b> ${order.address || 'Retira en local'}</div>
+            <div style="grid-column: 1 / -1; font-size: 15px;"><b>Dirección de Entrega:</b> <span style="text-decoration: underline;">${customerAddress}</span></div>
             <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
-            ${order.notes ? `<div class="order-info-notes extra-info" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+            ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
           <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
