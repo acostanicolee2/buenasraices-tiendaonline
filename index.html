@@ -201,7 +201,7 @@
     .btn:hover:not(:disabled) { filter: brightness(.96); }
 
     /* Formulario */
-    .form-box { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 25px; box-shadow: var(--shadow); margin-top: 40px; }
+    .form-box { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 25px; box-shadow: var(--shadow); margin-top: 30px; margin-bottom: 10px; }
     .form-box h2 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 4px; }
     .hint { color: var(--muted); font-size: 14px; margin: 0 0 19px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -292,46 +292,12 @@
 
   <main class="wrap">
     
-    <!-- Filtros de Búsqueda y Categorías -->
-    <div class="filter-bar">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Buscar producto (ej. Tomate, Miel, Queso...)" oninput="filterProducts()">
-      </div>
-      <div class="categories-scroll" id="categoryContainer">
-        <!-- Generadas dinámicamente -->
-      </div>
-    </div>
-
-    <section class="section">
-      <div class="grid">
-        <!-- Lista de Productos -->
-        <div id="products" class="products"></div>
-
-        <!-- Resumen de Pedido -->
-        <aside class="summary">
-          <h2>Tu pedido</h2>
-          <div id="cart" class="empty">Todavía no agregaste productos.</div>
-          
-          <div class="total">
-            <span>Total estimado</span>
-            <b id="total">$0</b>
-          </div>
-
-          <div id="minWarning" class="min-warning" style="display: none;"></div>
-
-          <button id="btnContinue" class="btn" onclick="document.getElementById('datos').scrollIntoView({behavior:'smooth'})">
-            Continuar con mis datos
-          </button>
-        </aside>
-      </div>
-    </section>
-
-    <!-- Formulario de Finalización -->
-    <section id="datos">
-      <div class="form-box">
-        <h2>¿A dónde lo llevamos?</h2>
-        <p class="hint">Ingresá tus datos para organizar la entrega y confirmar por WhatsApp.</p>
-        <form id="checkout">
+    <!-- Formulario de Datos Personales (AHORA DESPUÉS DEL CARRUSEL) -->
+    <form id="checkout">
+      <section id="datos">
+        <div class="form-box">
+          <h2>¿A dónde lo llevamos?</h2>
+          <p class="hint">Ingresá tus datos para organizar la entrega y confirmar por WhatsApp.</p>
           <div class="form-grid">
             <div class="field">
               <label for="name">Nombre y apellido</label>
@@ -388,11 +354,44 @@
               <textarea id="notes" placeholder="Timbre, indicaciones de horarios..."></textarea>
             </div>
           </div>
-          <button class="btn" type="submit" id="btnSubmit">Confirmar y Enviar a WhatsApp</button>
-        </form>
-        <div id="notice" class="notice"></div>
+        </div>
+      </section>
+
+      <!-- Filtros de Búsqueda y Categorías -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="🔍 Buscar producto (ej. Tomate, Miel, Queso...)" oninput="filterProducts()">
+        </div>
+        <div class="categories-scroll" id="categoryContainer">
+          <!-- Generadas dinámicamente -->
+        </div>
       </div>
-    </section>
+
+      <section class="section">
+        <div class="grid">
+          <!-- Lista de Productos -->
+          <div id="products" class="products"></div>
+
+          <!-- Resumen de Pedido -->
+          <aside class="summary">
+            <h2>Tu pedido</h2>
+            <div id="cart" class="empty">Todavía no agregaste productos.</div>
+            
+            <div class="total">
+              <span>Total estimado</span>
+              <b id="total">$0</b>
+            </div>
+
+            <div id="minWarning" class="min-warning" style="display: none;"></div>
+
+            <!-- BOTÓN DE CONFIRMACIÓN MOVIDO ABAJO DEL TOTAL -->
+            <button class="btn" type="submit" id="btnSubmit">Confirmar y Enviar a WhatsApp</button>
+          </aside>
+        </div>
+      </section>
+    </form>
+    
+    <div id="notice" class="notice"></div>
   </main>
 
   <!-- Botón Flotante de WhatsApp -->
@@ -459,7 +458,7 @@
     function renderCategoryButtons() {
       const container = document.getElementById('categoryContainer');
       container.innerHTML = CATEGORIES.map(cat => 
-        `<button class="cat-btn ${cat === selectedCategory ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>`
+        `<button type="button" class="cat-btn ${cat === selectedCategory ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>`
       ).join('');
     }
 
@@ -585,16 +584,16 @@
       const selectedZone = document.getElementById('zone').value;
       const minRequired = ZONES_MINIMUMS[selectedZone] || 0;
       const minWarning = document.getElementById('minWarning');
-      const btnContinue = document.getElementById('btnContinue');
+      const btnSubmit = document.getElementById('btnSubmit');
 
       if (selectedZone && totalAmount < minRequired) {
         const diff = minRequired - totalAmount;
         minWarning.style.display = 'block';
         minWarning.innerHTML = `⚠️ El mínimo de compra para <b>${selectedZone}</b> es de <b>${money(minRequired)}</b>. Te faltan <b>${money(diff)}</b>.`;
-        btnContinue.disabled = true;
+        btnSubmit.disabled = true;
       } else {
         minWarning.style.display = 'none';
-        btnContinue.disabled = false;
+        btnSubmit.disabled = false;
       }
     }
 
