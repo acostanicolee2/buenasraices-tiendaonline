@@ -292,7 +292,7 @@
 
   <main class="wrap">
     
-    <!-- Formulario de Datos Personales (AHORA DESPUÉS DEL CARRUSEL) -->
+    <!-- Formulario de Datos Personales -->
     <form id="checkout">
       <section id="datos">
         <div class="form-box">
@@ -384,7 +384,7 @@
 
             <div id="minWarning" class="min-warning" style="display: none;"></div>
 
-            <!-- BOTÓN DE CONFIRMACIÓN MOVIDO ABAJO DEL TOTAL -->
+            <!-- BOTÓN DE CONFIRMACIÓN -->
             <button class="btn" type="submit" id="btnSubmit">Confirmar y Enviar a WhatsApp</button>
           </aside>
         </div>
@@ -435,6 +435,7 @@
     const ESTIMATED_UNIT_WEIGHT = 2.5;
 
     let products = [];
+    let cartState = {}; // Almacena { productId: { quantity: Number, unitType: String } }
     let selectedCategory = 'Todas';
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -479,6 +480,23 @@
       renderProducts(filtered);
     }
 
+    // Actualiza la memoria interna cuando cambia cualquier input
+    function updateProductSelection(productId) {
+      const input = document.querySelector(`[data-id="${productId}"]`);
+      const unitSelect = document.querySelector(`[data-unit="${productId}"]`);
+      
+      const quantity = input ? parseFloat(input.value) || 0 : 0;
+      const unitType = unitSelect ? unitSelect.value : null;
+
+      if (quantity > 0) {
+        cartState[productId] = { quantity, unitType };
+      } else {
+        delete cartState[productId];
+      }
+
+      renderCart();
+    }
+
     function renderProducts(listToRender = products) {
       const container = document.getElementById('products');
       if (!listToRender.length) {
@@ -490,8 +508,15 @@
         let unit = p.sale_unit || 'kg';
         let isUnitByWeight = (unit === 'unidad_peso');
 
+        // Recuperar valor previo si existe en cartState
+        let saved = cartState[p.id] || { quantity: '', unitType: 'kg' };
+        let qtyVal = saved.quantity !== undefined ? saved.quantity : '';
+
         let selector = unit === 'kg' 
-          ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="renderCart()"><option value="kg">kg</option><option value="g">gr</option></select>` 
+          ? `<select aria-label="Unidad" data-unit="${p.id}" onchange="updateProductSelection('${p.id}')">
+              <option value="kg" ${saved.unitType === 'kg' ? 'selected' : ''}>kg</option>
+              <option value="g" ${saved.unitType === 'g' ? 'selected' : ''}>gr</option>
+             </select>` 
           : `<select aria-label="Unidad"><option>${isUnitByWeight ? 'un.' : saleLabel(unit)}</option></select>`;
 
         let weightNote = isUnitByWeight 
@@ -517,7 +542,7 @@
             ${p.category ? `<div class="product-category-tag">${p.category}</div>` : ''}
             
             <div class="product-controls">
-              <input aria-label="Cantidad de ${p.name}" type="number" min="0" step="${unit === 'kg' ? '0.1' : '1'}" placeholder="Cant." data-id="${p.id}" oninput="renderCart()">
+              <input aria-label="Cantidad de ${p.name}" type="number" min="0" step="${unit === 'kg' ? '0.1' : '1'}" placeholder="Cant." data-id="${p.id}" value="${qtyVal}" oninput="updateProductSelection('${p.id}')">
               ${selector}
             </div>
           </div>
@@ -539,12 +564,13 @@
 
     function cartItems() {
       return products.map(p => {
-        let input = document.querySelector(`[data-id="${p.id}"]`),
-            saleUnit = p.sale_unit || 'kg',
-            unitSelect = document.querySelector(`[data-unit="${p.id}"]`),
-            selected = (saleUnit === 'kg' && unitSelect) ? unitSelect.value : saleUnit,
-            quantity = input ? Number(input.value) : 0,
-            g = saleUnit === 'kg' ? grams(quantity, selected) : quantity;
+        let saved = cartState[p.id];
+        if (!saved || !saved.quantity) return null;
+
+        let saleUnit = p.sale_unit || 'kg';
+        let selected = (saleUnit === 'kg' && saved.unitType) ? saved.unitType : saleUnit;
+        let quantity = Number(saved.quantity);
+        let g = saleUnit === 'kg' ? grams(quantity, selected) : quantity;
         
         let labelDisplay = '';
 
@@ -561,7 +587,7 @@
         }
 
         return { ...p, sale_unit: saleUnit, g, display: labelDisplay };
-      }).filter(x => x.g > 0);
+      }).filter(Boolean);
     }
 
     function calc(items) {
@@ -697,8 +723,10 @@
 
       window.open(waUrl, '_blank');
 
+      // Limpiar formulario e historial del carrito
       e.target.reset();
-      document.querySelectorAll('[data-id]').forEach(x => x.value = '');
+      cartState = {};
+      renderProducts();
       renderCart();
       notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
@@ -707,4 +735,3 @@
   </script>
 </body>
 </html>
-    
