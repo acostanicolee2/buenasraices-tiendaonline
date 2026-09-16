@@ -168,6 +168,27 @@
 </head>
 <body>
 
+  <!-- MODAL DE INICIO DE SESIÓN -->
+  <div id="loginScreen" class="modal-overlay" style="display: flex; background: var(--cream); z-index: 10000;">
+    <div class="card" style="width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow);">
+      <h2 style="margin-bottom: 5px; font-family: Georgia, serif; font-size: 28px;">Buenas<i>raíces</i></h2>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Ingresá tus credenciales para acceder al panel</p>
+      
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="field" style="margin-bottom: 12px; text-align: left;">
+          <label for="loginEmail">Correo electrónico</label>
+          <input type="email" id="loginEmail" required placeholder="admin@buenasraices.com">
+        </div>
+        <div class="field" style="margin-bottom: 20px; text-align: left;">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button class="btn" type="submit" style="width: 100%; justify-content: center; padding: 12px;">Ingresar al Panel</button>
+      </form>
+      <p id="loginError" style="color: var(--danger); font-size: 13px; margin-top: 15px; display: none;"></p>
+    </div>
+  </div>
+
   <div class="admin-layout">
     
     <!-- SIDEBAR / MENÚ LATERAL -->
@@ -184,6 +205,9 @@
         </a>
         <a class="nav-item" onclick="switchView('accountingView', this)">
           <span class="icon">📊</span> Contabilidad General
+        </a>
+        <a class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f87171;">
+          <span class="icon">🚪</span> Cerrar Sesión
         </a>
       </nav>
       <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.2</div>
@@ -531,7 +555,6 @@
   </div>
 
   <script src="config.js"></script>
-  <!-- Corregido el CDN de Supabase para producción -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
@@ -540,6 +563,44 @@
     let storeDailySales = [];
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
+
+    // --- LÓGICA DE AUTENTICACIÓN ---
+    async function checkAuth() {
+      const { data: { session } } = await db.auth.getSession();
+      
+      if (session) {
+        document.getElementById('loginScreen').style.display = 'none';
+        loadProducts();
+        loadSavedConfig();
+      } else {
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+      
+      errorEl.style.display = 'none';
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errorEl.textContent = 'Credenciales inválidas: ' + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        document.getElementById('loginScreen').style.display = 'none';
+        loadProducts();
+        loadSavedConfig();
+      }
+    }
+
+    async function handleLogout() {
+      await db.auth.signOut();
+      window.location.reload();
+    }
 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -1264,9 +1325,8 @@
       }, 300);
     }
 
-    // Inicialización
-    loadProducts();
-    loadSavedConfig();
+    // Inicialización y verificación de usuario
+    checkAuth();
   </script>
 </body>
 </html>
