@@ -66,7 +66,7 @@
     .prod-img-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e5dbc4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
     .zone-group { margin-bottom: 35px; }
-    .zone-header { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .zone-header { background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
     .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); page-break-inside: avoid; break-inside: avoid; }
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
@@ -258,15 +258,15 @@
           <p style="color: var(--muted);">Cargando pedidos...</p>
         </div>
 
-        <!-- BOTONES DE DESCARGA PDF AL FINAL -->
+        <!-- BOTONES DE DESCARGA GENERALES AL FINAL -->
         <div class="footer-actions no-print">
           <div>
-            <h3 style="margin: 0 0 5px; font-size: 16px;">Exportar / Imprimir Lista</h3>
-            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí el reporte completo o la hoja exclusiva de reparto.</p>
+            <h3 style="margin: 0 0 5px; font-size: 16px;">Exportar / Imprimir Lista Completa</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí la lista global de todas las zonas.</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn" onclick="printReport('full')">📄 Descargar PDF Pedidos Completo</button>
-            <button class="btn btn-secondary" onclick="printReport('delivery')">🚚 Descargar PDF Hoja de Reparto</button>
+            <button class="btn" onclick="printReport('full', 'ALL')">📄 PDF Pedidos Completo (Global)</button>
+            <button class="btn btn-secondary" onclick="printReport('delivery', 'ALL')">🚚 PDF Hoja de Reparto (Global)</button>
           </div>
         </div>
 
@@ -511,10 +511,16 @@
 
       for (const [zone, zoneOrders] of Object.entries(grouped)) {
         html += `
-          <div class="zone-group">
+          <div class="zone-group" id="zone-group-${zone.replace(/\s+/g, '-')}">
             <div class="zone-header">
-              <span>Zona: ${zone}</span>
-              <span style="font-size: 14px; font-weight: normal;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
+              <div>
+                <span>Zona: ${zone}</span>
+                <span style="font-size: 14px; font-weight: normal; margin-left: 8px;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
+              </div>
+              <div class="no-print" style="display: flex; gap: 8px;">
+                <button class="btn btn-sm" onclick="printReport('full', '${zone}')">📄 Pedidos Zona</button>
+                <button class="btn btn-secondary btn-sm" onclick="printReport('delivery', '${zone}')">🚚 Reparto Zona</button>
+              </div>
             </div>
             ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
           </div>
@@ -584,14 +590,18 @@
         }).join('');
       }
 
-      // Direccion explícita y siempre visible
       const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
 
       return `
         <div class="order-card" id="order-card-${order.id}">
           <div class="order-header no-print">
-            <span class="order-title">Pedido #${order.id}</span>
-            <span class="order-date">${orderDate}</span>
+            <div>
+              <span class="order-title">Pedido #${order.id}</span>
+              <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
+            </div>
+            <div>
+              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar Pedido</button>
+            </div>
           </div>
 
           <div class="order-info">
@@ -660,10 +670,31 @@
       await recalculateOrderTotal(orderId);
     }
 
+    async function deleteFullOrder(orderId) {
+      if (!confirm(`¿Estás seguro de que deseas ELIMINAR el pedido #${orderId}? Esta acción borrará el pedido y todos sus ítems de la base de datos.`)) return;
+
+      // 1. Eliminar ítems del pedido
+      const { error: itemsErr } = await db.from('order_items').delete().eq('order_id', orderId);
+      if (itemsErr) {
+        showNotice('Error al eliminar ítems del pedido: ' + itemsErr.message);
+        return;
+      }
+
+      // 2. Eliminar la orden principal
+      const { error: orderErr } = await db.from('orders').delete().eq('id', orderId);
+      if (orderErr) {
+        showNotice('Error al eliminar el pedido: ' + orderErr.message);
+        return;
+      }
+
+      showNotice(`Pedido #${orderId} eliminado correctamente.`);
+      loadOrders();
+    }
+
     async function recalculateOrderTotal(orderId) {
       const { data: items } = await db.from('order_items').select('*').eq('order_id', orderId);
-      
-      let newTotal = 0;
+
+      let total = 0;
       if (items && items.length > 0) {
         items.forEach(item => {
           let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
@@ -674,26 +705,25 @@
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
           const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
 
-          newTotal += isWeightBased ? (weight * unitPrice) : (units * unitPrice);
+          total += isWeightBased ? (weight * unitPrice) : (units * unitPrice);
         });
       }
 
-      await db.from('orders').update({ total_amount: newTotal }).eq('id', orderId);
-      showNotice('Pedido actualizado correctamente.');
+      await db.from('orders').update({ total_amount: total }).eq('id', orderId);
+      showNotice('¡Pedido actualizado con éxito!');
       loadOrders();
     }
 
-    // --- MODAL AGREGAR PRODUCTO ---
+    // --- MODAL PARA AGREGAR PRODUCTO A PEDIDO ---
     function openAddItemModal(orderId) {
       document.getElementById('modalOrderId').value = orderId;
       const select = document.getElementById('modalProductSelect');
       
-      select.innerHTML = allProducts.map(p => `
-        <option value="${p.id}">${p.name} - ${money(p.price_per_kg)} / ${p.sale_unit}</option>
-      `).join('');
-
+      select.innerHTML = allProducts.map(p => `<option value="${p.id}">${p.name} (${money(p.price_per_kg)} / ${p.sale_unit})</option>`).join('');
+      
+      if (allProducts.length > 0) onModalProductChange();
+      
       document.getElementById('addItemModal').style.display = 'flex';
-      onModalProductChange();
     }
 
     function closeAddItemModal() {
@@ -711,13 +741,13 @@
     async function saveNewOrderItem() {
       const orderId = document.getElementById('modalOrderId').value;
       const prodId = document.getElementById('modalProductSelect').value;
-      const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || 0;
-      const units = parseFloat(document.getElementById('modalUnits').value) || 1;
-      const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
-
       const p = allProducts.find(item => item.id === prodId);
+
       if (!p) return;
 
+      const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || p.price_per_kg;
+      const units = parseInt(document.getElementById('modalUnits').value) || 1;
+      const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
       const isWeightBased = p.sale_unit === 'kg' || p.sale_unit === 'unidad_peso' || p.sale_unit === '1g';
 
       const payload = {
@@ -734,7 +764,7 @@
       const { error } = await db.from('order_items').insert(payload);
 
       if (error) {
-        alert('Error al agregar el ítem: ' + error.message);
+        showNotice('Error al agregar ítem: ' + error.message);
         return;
       }
 
@@ -742,28 +772,41 @@
       await recalculateOrderTotal(orderId);
     }
 
-    // --- IMPRESIÓN Y EXPORTACIÓN PDF ---
-    function printReport(mode) {
-      const printTitle = document.getElementById('printReportTitle');
+    // --- IMPRESIÓN Y EXPORTACIÓN A PDF ---
+    function printReport(mode, targetZone = 'ALL') {
+      const titleElem = document.getElementById('printReportTitle');
       
-      if (mode === 'delivery') {
-        document.body.classList.add('is-delivery-mode');
-        printTitle.textContent = 'Hoja de Reparto — Buenas Raíces';
-      } else {
-        document.body.classList.remove('is-delivery-mode');
-        printTitle.textContent = 'Lista Completa de Pedidos — Buenas Raíces';
+      // Aplicar filtro de zona temporal antes de imprimir si no se seleccionó "ALL"
+      let previousFilterValue = document.getElementById('zoneFilter').value;
+      if (targetZone !== 'ALL') {
+        document.getElementById('zoneFilter').value = targetZone;
+        filterOrdersByZone();
       }
 
-      filterOrdersByZone();
+      if (mode === 'delivery') {
+        document.body.classList.add('is-delivery-mode');
+        titleElem.textContent = targetZone === 'ALL' 
+          ? 'Hoja de Reparto General — Buenas Raíces' 
+          : `Hoja de Reparto — Zona: ${targetZone}`;
+      } else {
+        document.body.classList.remove('is-delivery-mode');
+        titleElem.textContent = targetZone === 'ALL' 
+          ? 'Lista Completa de Pedidos — Buenas Raíces' 
+          : `Lista de Pedidos — Zona: ${targetZone}`;
+      }
 
       setTimeout(() => {
         window.print();
-        document.body.classList.remove('is-delivery-mode');
-        filterOrdersByZone();
-      }, 200);
+        
+        // Restaurar filtro previo tras la acción de imprimir
+        if (targetZone !== 'ALL' && previousFilterValue !== targetZone) {
+          document.getElementById('zoneFilter').value = previousFilterValue;
+          filterOrdersByZone();
+        }
+      }, 150);
     }
 
-    // Inicializar al cargar la página
+    // Inicializar la app
     loadProducts();
   </script>
 </body>
