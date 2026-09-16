@@ -312,42 +312,6 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
-    // Función para formatear de forma clara las cantidades en la impresión/PDF
-    function formatItemQty(saleUnit, units, weight) {
-      const u = Number(units) || 1;
-      const w = Number(weight) || 0;
-
-      // 1. Productos por Kilo / Gramo
-      if (saleUnit === 'kg') {
-        if (w < 1 && w > 0) {
-          return `${w * 1000} g`;
-        }
-        return `${w} kg`;
-      }
-      
-      if (saleUnit === '1g') {
-        return `${w} g`;
-      }
-
-      // 2. Fraccionamiento en gramos fijos (ej: paquetes de 100g, 250g, 500g)
-      if (['25g', '30g', '50g', '100g', '250g', '500g'].includes(saleUnit)) {
-        return `${u} paq. (${saleUnit})`;
-      }
-
-      // 3. Productos por Docena
-      if (saleUnit === 'docena') {
-        return `${u} docena${u > 1 ? 's' : ''}`;
-      }
-
-      // 4. Productos por Unidad con peso variable
-      if (saleUnit === 'unidad_peso') {
-        return `${u} un. (${w} kg)`;
-      }
-
-      // 5. Productos por Unidad Estándar
-      return `${u} un.`;
-    }
-
     function isButcherCategory(catName) {
       if (!catName) return false;
       const c = catName.toLowerCase().trim();
@@ -589,9 +553,6 @@
           const subtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
           totalCalculado += subtotal;
 
-          // Texto formateado limpio para la impresión
-          const printQtyText = formatItemQty(saleUnit, units, weight);
-
           return `
             <tr>
               <td><b>${item.product_name}</b></td>
@@ -610,7 +571,7 @@
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  <b>${printQtyText}</b>
+                  ${units} un. (${weight} kg)
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -623,7 +584,6 @@
         }).join('');
       }
 
-      // Dirección explícita y siempre visible
       const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
 
       return `
@@ -695,14 +655,47 @@
 
     async function deleteOrderItem(itemId, orderId) {
       if (!confirm('¿Quitar este producto del pedido?')) return;
-      await db.from('order_items').delete().eq('id', itemId);
+      const { error } = await db.from('order_items').delete().eq('id', itemId);
+      if (error) {
+        showNotice('Error al eliminar: ' + error.message);
+        return;
+      }
       await recalculateOrderTotal(orderId);
     }
 
+    async function recalculateOrderTotal(orderId) {
+      const { data: items } = await db.from('order_items').select('*').eq('order_id', orderId);
+      
+      let newTotal = 0;
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+          const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
+          const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
+          const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
+          
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          
+          newTotal += isWeightBased ? (weight * unitPrice) : (units * unitPrice);
+        });
+      }
+
+      await db.from('orders').update({ total_amount: newTotal }).eq('id', orderId);
+      showNotice('Pedido actualizado correctamente.');
+      loadOrders();
+    }
+
+    // --- MODAL AGREGAR ITEM A UN PEDIDO ---
     function openAddItemModal(orderId) {
       document.getElementById('modalOrderId').value = orderId;
       const select = document.getElementById('modalProductSelect');
       
+      if (!allProducts.length) {
+        select.innerHTML = '<option value="">No hay productos disponibles</option>';
+        return;
+      }
+
       select.innerHTML = allProducts.map(p => `
         <option value="${p.id}">${p.name} - ${money(p.price_per_kg)} / ${p.sale_unit}</option>
       `).join('');
@@ -711,84 +704,78 @@
       onModalProductChange();
     }
 
-    function onModalProductChange() {
-      const prodId = document.getElementById('modalProductSelect').value;
-      const p = allProducts.find(item => item.id === prodId);
-      if (p) {
-        document.getElementById('modalUnitPrice').value = p.price_per_kg;
-      }
-    }
-
     function closeAddItemModal() {
       document.getElementById('addItemModal').style.display = 'none';
+    }
+
+    function onModalProductChange() {
+      const prodId = document.getElementById('modalProductSelect').value;
+      const p = allProducts.find(prod => prod.id === prodId);
+      if (p) {
+        document.getElementById('modalUnitPrice').value = p.price_per_kg;
+        document.getElementById('modalUnits').value = 1;
+        document.getElementById('modalWeight').value = 1;
+      }
     }
 
     async function saveNewOrderItem() {
       const orderId = document.getElementById('modalOrderId').value;
       const prodId = document.getElementById('modalProductSelect').value;
-      const p = allProducts.find(item => item.id === prodId);
-      if (!p) return;
+      const p = allProducts.find(prod => prod.id === prodId);
+
+      if (!p || !orderId) {
+        showNotice('Selecciona un producto válido.');
+        return;
+      }
 
       const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || p.price_per_kg;
       const units = parseFloat(document.getElementById('modalUnits').value) || 1;
       const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
-
       const isWeightBased = p.sale_unit === 'kg' || p.sale_unit === 'unidad_peso' || p.sale_unit === '1g';
 
-      await db.from('order_items').insert({
+      const newItem = {
         order_id: orderId,
         product_name: p.name,
-        units_quantity: units,
-        weight_quantity: weight,
-        quantity: isWeightBased ? weight : units,
+        category: p.category,
         unit_price: unitPrice,
         sale_unit: p.sale_unit,
-        category: p.category
-      });
+        units_quantity: units,
+        weight_quantity: weight,
+        quantity: isWeightBased ? weight : units
+      };
+
+      const { error } = await db.from('order_items').insert(newItem);
+
+      if (error) {
+        showNotice('Error al agregar ítem: ' + error.message);
+        return;
+      }
 
       closeAddItemModal();
       await recalculateOrderTotal(orderId);
     }
 
-    async function recalculateOrderTotal(orderId) {
-      const { data: items } = await db.from('order_items').select('unit_price, weight_quantity, units_quantity, quantity, sale_unit').eq('order_id', orderId);
-      
-      let newTotal = 0;
-      (items || []).forEach(item => {
-        const isWeightBased = item.sale_unit === 'kg' || item.sale_unit === 'unidad_peso' || item.sale_unit === '1g';
-        const w = item.weight_quantity !== null && item.weight_quantity !== undefined ? item.weight_quantity : (item.quantity || 1);
-        const u = item.units_quantity || 1;
-        newTotal += isWeightBased ? (w * (item.unit_price || 0)) : (u * (item.unit_price || 0));
-      });
-
-      await db.from('orders').update({ total: newTotal }).eq('id', orderId);
-      showNotice('Pedido #' + orderId + ' actualizado.');
-      loadOrders();
-    }
-
+    // --- REPORTES E IMPRESIÓN ---
     function printReport(type) {
+      const body = document.body;
       const title = document.getElementById('printReportTitle');
 
       if (type === 'delivery') {
-        document.body.classList.add('is-delivery-mode');
-        title.textContent = "Hoja de reparto Buenas Raíces";
+        body.classList.add('is-delivery-mode');
+        title.textContent = 'Hoja de Reparto — Buenas Raíces';
       } else {
-        document.body.classList.remove('is-delivery-mode');
-        title.textContent = "Lista Completa de Pedidos — Buenas Raíces";
+        body.classList.remove('is-delivery-mode');
+        title.textContent = 'Lista Completa de Pedidos — Buenas Raíces';
       }
 
       filterOrdersByZone();
-
       setTimeout(() => {
         window.print();
-        
-        setTimeout(() => {
-          document.body.classList.remove('is-delivery-mode');
-          filterOrdersByZone();
-        }, 500);
-      }, 100);
+        body.classList.remove('is-delivery-mode');
+      }, 300);
     }
 
+    // Inicialización al cargar la página
     loadProducts();
   </script>
 </body>
