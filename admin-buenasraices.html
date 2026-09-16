@@ -312,6 +312,42 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
+    // Función para formatear de forma clara las cantidades en la impresión/PDF
+    function formatItemQty(saleUnit, units, weight) {
+      const u = Number(units) || 1;
+      const w = Number(weight) || 0;
+
+      // 1. Productos por Kilo / Gramo
+      if (saleUnit === 'kg') {
+        if (w < 1 && w > 0) {
+          return `${w * 1000} g`;
+        }
+        return `${w} kg`;
+      }
+      
+      if (saleUnit === '1g') {
+        return `${w} g`;
+      }
+
+      // 2. Fraccionamiento en gramos fijos (ej: paquetes de 100g, 250g, 500g)
+      if (['25g', '30g', '50g', '100g', '250g', '500g'].includes(saleUnit)) {
+        return `${u} paq. (${saleUnit})`;
+      }
+
+      // 3. Productos por Docena
+      if (saleUnit === 'docena') {
+        return `${u} docena${u > 1 ? 's' : ''}`;
+      }
+
+      // 4. Productos por Unidad con peso variable
+      if (saleUnit === 'unidad_peso') {
+        return `${u} un. (${w} kg)`;
+      }
+
+      // 5. Productos por Unidad Estándar
+      return `${u} un.`;
+    }
+
     function isButcherCategory(catName) {
       if (!catName) return false;
       const c = catName.toLowerCase().trim();
@@ -553,6 +589,9 @@
           const subtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
           totalCalculado += subtotal;
 
+          // Texto formateado limpio para la impresión
+          const printQtyText = formatItemQty(saleUnit, units, weight);
+
           return `
             <tr>
               <td><b>${item.product_name}</b></td>
@@ -571,7 +610,7 @@
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  ${units} un. (${weight} kg)
+                  <b>${printQtyText}</b>
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -584,7 +623,7 @@
         }).join('');
       }
 
-      // Direccion explícita y siempre visible
+      // Dirección explícita y siempre visible
       const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
 
       return `
