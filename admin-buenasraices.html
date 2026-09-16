@@ -123,7 +123,7 @@
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: var(--shadow); }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
-    .modal-card { background: var(--paper); padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: var(--shadow); }
+    .modal-card { background: var(--paper); padding: 25px; border-radius: 16px; width: 90%; max-width: 600px; box-shadow: var(--shadow); max-height: 85vh; overflow-y: auto; }
 
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
 
@@ -134,7 +134,7 @@
 
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
-      .sidebar, .header-bar, .notice, .btn, .no-print, .modal-overlay, .footer-actions, .menu-toggle-btn { display: none !important; }
+      .sidebar, .header-bar, .notice, .btn, .no-print, .footer-actions, .menu-toggle-btn { display: none !important; }
       .main-content { padding: 0 !important; overflow: visible !important; }
       .zone-group { page-break-after: auto; margin-bottom: 20px; }
       .zone-header { background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 10px; }
@@ -147,6 +147,9 @@
         break-inside: avoid !important;
       }
       
+      .modal-overlay { position: static; background: none; width: 100%; height: auto; }
+      .modal-card { width: 100%; max-width: 100%; box-shadow: none; padding: 0; }
+
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
       .print-only { display: inline !important; }
     }
@@ -183,7 +186,7 @@
           <span class="icon">📊</span> Contabilidad y Ventas
         </a>
       </nav>
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.0</div>
+      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.1</div>
     </aside>
 
     <!-- CONTENIDO PRINCIPAL -->
@@ -304,6 +307,7 @@
             <select id="zoneFilter" onchange="filterOrdersByZone()" style="padding: 8px 12px; font-weight: bold;">
               <option value="ALL">Todas las Zonas</option>
             </select>
+            <button class="btn btn-success" onclick="openSummaryModal('ALL')">📋 Resumen de Armado General</button>
             <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar Pedidos</button>
           </div>
         </div>
@@ -382,9 +386,40 @@
     </main>
   </div>
 
+  <!-- MODAL: RESUMEN DE ARMADO (CONSOLIDADO DE PRODUCTOS) -->
+  <div id="summaryModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
+        <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
+      </div>
+      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección:</p>
+      
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad Total Solicitada</th>
+              <th>Pedidos que lo incluyen</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+            <!-- Se llena dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;" class="no-print">
+        <button class="btn btn-secondary" onclick="closeSummaryModal()">Cerrar</button>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir Resumen</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal para Agregar Producto a un Pedido -->
   <div id="addItemModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 500px;">
       <h3 style="margin-top:0;">Agregar Producto al Pedido</h3>
       <input type="hidden" id="modalOrderId">
       <div class="field" style="margin-bottom: 12px;">
@@ -428,15 +463,6 @@
       if (!catName) return false;
       const c = catName.toLowerCase().trim();
       return c === 'carne vacuna' || c === 'carnes de cerdo' || c === 'pollo';
-    }
-
-    function isButcherOrder(order) {
-      if (!order.order_items || order.order_items.length === 0) return false;
-      return order.order_items.some(item => {
-        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
-        const cat = item.category || (catalogProd ? catalogProd.category : '') || '';
-        return isButcherCategory(cat);
-      });
     }
 
     function handleEnterKey(event, itemId, orderId, unitPrice, saleUnit) {
@@ -634,7 +660,8 @@
                 <span>Zona: ${zone}</span>
                 <span style="font-size: 14px; font-weight: normal; margin-left: 8px;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
               </div>
-              <div class="no-print" style="display: flex; gap: 8px;">
+              <div class="no-print" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-success" onclick="openSummaryModal('${zone}')">📋 Resumen Armado Zona</button>
                 <button class="btn btn-sm" onclick="printReport('full', '${zone}')">📄 Pedidos Zona</button>
                 <button class="btn btn-secondary btn-sm" onclick="printReport('delivery', '${zone}')">🚚 Reparto Zona</button>
               </div>
@@ -763,6 +790,76 @@
       `;
     }
 
+    // --- RESUMEN DE ARMADO / CONSOLIDADO ---
+    function openSummaryModal(zone) {
+      let filtered = rawOrders;
+      const title = document.getElementById('summaryModalTitle');
+      
+      if (zone !== 'ALL') {
+        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
+        title.textContent = `📋 Resumen de Armado - Zona: ${zone}`;
+      } else {
+        title.textContent = `📋 Resumen de Armado General (Todas las Zonas)`;
+      }
+
+      const summary = {};
+
+      filtered.forEach(order => {
+        if (!order.order_items) return;
+        order.order_items.forEach(item => {
+          const key = item.product_name.trim();
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === key.toLowerCase());
+          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+
+          if (!summary[key]) {
+            summary[key] = {
+              name: key,
+              totalUnits: 0,
+              totalWeight: 0,
+              unit: unit,
+              ordersCount: 0
+            };
+          }
+
+          summary[key].totalUnits += units;
+          summary[key].totalWeight += weight;
+          summary[key].ordersCount += 1;
+        });
+      });
+
+      const tbody = document.getElementById('summaryTableBody');
+      const items = Object.values(summary);
+
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay productos para mostrar en este resumen.</td></tr>';
+      } else {
+        tbody.innerHTML = items.map(i => {
+          let qtyText = '';
+          if (i.unit === 'kg' || i.unit === 'unidad_peso' || i.unit === '1g') {
+            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalWeight.toFixed(2)} kg</b> (${i.totalUnits} un.)`;
+          } else {
+            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalUnits} ${i.unit}</b>`;
+          }
+
+          return `
+            <tr>
+              <td><b>${i.name}</b></td>
+              <td>${qtyText}</td>
+              <td>${i.ordersCount} pedido(s)</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('summaryModal').style.display = 'flex';
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').style.display = 'none';
+    }
+
     async function toggleOrderStatus(orderId, newStatus) {
       const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) {
@@ -791,7 +888,6 @@
 
     function calculateAccounting() {
       const now = new Date();
-      // Calcular el inicio de la semana actual (lunes)
       const day = now.getDay();
       const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
       const startOfWeek = new Date(now.setDate(diffToMonday));
@@ -827,7 +923,6 @@
       document.getElementById('pendingCount').textContent = pendingCount;
       document.getElementById('totalSales').textContent = money(totalSales);
 
-      // Tabla de Historial Contable
       const tbody = document.getElementById('accountingTableBody');
       if (!deliveredOrders.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados aún.</td></tr>';
