@@ -22,12 +22,41 @@
     body { margin: 0; background: var(--cream); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; height: 100vh; overflow: hidden; }
     
     .admin-layout { display: flex; height: 100vh; position: relative; }
-    .sidebar { width: 260px; background: #1c3327; color: #fff; padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0; transition: all 0.3s ease; z-index: 100; }
-    .sidebar.collapsed { margin-left: -260px; }
+
+    /* SIDEBAR Y MENÚ DESPLEGABLE */
+    .sidebar { 
+      width: 260px; 
+      background: #1c3327; 
+      color: #fff; 
+      padding: 25px 20px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .sidebar.collapsed {
+      margin-left: -260px;
+    }
+
     .sidebar-brand { font-family: Georgia, serif; font-size: 22px; font-weight: bold; border-bottom: 1px solid #ffffff22; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
     .sidebar-brand i { font-style: normal; color: #8eb370; }
     
-    .menu-toggle-btn { background: transparent; border: none; color: var(--ink); font-size: 24px; cursor: pointer; padding: 5px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .menu-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--ink);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1; }
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #d6e1d2; text-decoration: none; font-weight: 600; font-size: 14.5px; cursor: pointer; transition: 0.2s; }
     .nav-item:hover, .nav-item.active { background: var(--leaf); color: #fff; }
@@ -56,9 +85,12 @@
     .btn-secondary { background: #e0d8c3; color: var(--ink); }
     .btn-secondary:hover { background: #d0c5a9; }
     .btn-danger { background: var(--danger); color: #fff; padding: 5px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #bd362f; }
     .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #1b5e20; }
     .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 6px; }
     .btn-save-item { background: #356c47; color: #fff; padding: 4px 8px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+    .btn-save-item:hover { background: #244031; }
 
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
@@ -70,7 +102,7 @@
     .zone-group { margin-bottom: 35px; }
     .zone-header { background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 18px; font-weight: bold; font-family: Georgia, serif; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
-    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); page-break-inside: avoid; break-inside: avoid; }
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
     .order-title { font-weight: bold; font-size: 18px; color: var(--leaf); }
     .order-date { font-size: 12px; color: var(--muted); }
@@ -89,36 +121,66 @@
     .stat-label { font-size: 13px; color: var(--muted); font-weight: 600; }
 
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: var(--shadow); }
+
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
     .modal-card { background: var(--paper); padding: 25px; border-radius: 16px; width: 90%; max-width: 600px; box-shadow: var(--shadow); max-height: 85vh; overflow-y: auto; }
+
     .footer-actions { background: var(--paper); padding: 20px; border-radius: 12px; border: 1px solid var(--line); margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: var(--shadow); }
-    
-    .print-only { display: none; }
-    .print-only-title { display: none; }
+
+    .price-col, 
+    .order-total { display: table-cell; }
+
+    body.is-delivery-mode .order-info-notes { display: none !important; }
 
     @media print {
       body { background: #fff !important; color: #000 !important; font-size: 12px; overflow: visible; }
       .sidebar, .header-bar, .notice, .btn, .no-print, .footer-actions, .menu-toggle-btn { display: none !important; }
       .main-content { padding: 0 !important; overflow: visible !important; }
-      .print-only { display: inline !important; }
+      .zone-group { page-break-after: auto; margin-bottom: 20px; }
+      .zone-header { background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 10px; }
+      
+      .order-card { 
+        box-shadow: none !important; 
+        border: 1px solid #ccc !important; 
+        margin-bottom: 15px !important; 
+        page-break-inside: avoid !important; 
+        break-inside: avoid !important;
+      }
+      
+      .modal-overlay { position: static; background: none; width: 100%; height: auto; }
+      .modal-card { width: 100%; max-width: 100%; box-shadow: none; padding: 0; }
+
       .print-only-title { display: block !important; text-align: center; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
+      .print-only { display: inline !important; }
+    }
+    .print-only { display: none; }
+    .print-only-title { display: none; }
+
+    @media (max-width: 900px) {
+      .admin-layout { flex-direction: column; height: auto; overflow: visible; }
+      body { overflow: auto; }
+      .sidebar { width: 100%; height: auto; margin-left: 0 !important; }
+      .sidebar.collapsed { display: none; }
+      .main-content { padding: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- MODAL LOGIN -->
+  <!-- MODAL DE INICIO DE SESIÓN -->
   <div id="loginScreen" class="modal-overlay" style="display: flex; background: var(--cream); z-index: 10000;">
-    <div class="card" style="width: 100%; max-width: 400px; text-align: center;">
+    <div class="card" style="width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow);">
       <h2 style="margin-bottom: 5px; font-family: Georgia, serif; font-size: 28px;">Buenas<i>raíces</i></h2>
       <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Ingresá tus credenciales para acceder al panel</p>
+      
       <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="field" style="margin-bottom: 12px; text-align: left;">
-          <label>Correo electrónico</label>
+          <label for="loginEmail">Correo electrónico</label>
           <input type="email" id="loginEmail" required placeholder="admin@buenasraices.com">
         </div>
         <div class="field" style="margin-bottom: 20px; text-align: left;">
-          <label>Contraseña</label>
+          <label for="loginPassword">Contraseña</label>
           <input type="password" id="loginPassword" required placeholder="••••••••">
         </div>
         <button class="btn" type="submit" style="width: 100%; justify-content: center; padding: 12px;">Ingresar al Panel</button>
@@ -128,27 +190,38 @@
   </div>
 
   <div class="admin-layout">
-    <!-- SIDEBAR -->
+    
+    <!-- SIDEBAR / MENÚ LATERAL -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-brand">Buenas<i>raíces</i> Admin</div>
+      <div class="sidebar-brand">
+        Buenas<i>raíces</i> Admin
+      </div>
       <nav class="nav-menu">
-        <a class="nav-item active" onclick="switchView('productsView', this)"><span class="icon">🌱</span> Catálogo de Productos</a>
-        <a class="nav-item" onclick="switchView('ordersView', this)"><span class="icon">📦</span> Pedidos</a>
-        <a class="nav-item" onclick="switchView('accountingView', this)"><span class="icon">📊</span> Contabilidad General</a>
-        <a class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f87171;"><span class="icon">🚪</span> Cerrar Sesión</a>
+        <a class="nav-item active" onclick="switchView('productsView', this)">
+          <span class="icon">🌱</span> Catálogo de Productos
+        </a>
+        <a class="nav-item" onclick="switchView('ordersView', this)">
+          <span class="icon">📦</span> Pedidos
+        </a>
+        <a class="nav-item" onclick="switchView('accountingView', this)">
+          <span class="icon">📊</span> Contabilidad General
+        </a>
+        <a class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f87171;">
+          <span class="icon">🚪</span> Cerrar Sesión
+        </a>
       </nav>
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.4</div>
+      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.3</div>
     </aside>
 
-    <!-- MAIN CONTENT -->
+    <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">
       <div id="notice" class="notice"></div>
 
-      <!-- SECCIÓN 1: PRODUCTOS -->
+      <!-- SECCIÓN 1: CATÁLOGO DE PRODUCTOS -->
       <section id="productsView" class="view-section active">
         <div class="header-bar">
           <div class="header-bar-left">
-            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()">☰</button>
+            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Menú">☰</button>
             <h1>Gestión del Catálogo</h1>
           </div>
           <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
@@ -160,11 +233,11 @@
             <input type="hidden" id="prodId">
             <div class="form-grid">
               <div class="field">
-                <label>Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Combo Verde, Orégano">
+                <label for="name">Nombre del Producto</label>
+                <input id="name" required placeholder="Ej. Orégano, Tomate, Combo Verde">
               </div>
               <div class="field">
-                <label>Categoría</label>
+                <label for="category">Categoría</label>
                 <select id="category" required>
                   <option value="Verduras">Verduras</option>
                   <option value="Frutas">Frutas</option>
@@ -184,7 +257,7 @@
                 </select>
               </div>
               <div class="field">
-                <label>Unidad de Venta / Fraccionamiento</label>
+                <label for="sale_unit">Unidad de Venta / Fraccionamiento</label>
                 <select id="sale_unit" required onchange="updatePriceLabel()">
                   <option value="kg">Por Kilo (kg)</option>
                   <option value="1g">Por Gramo (1g)</option>
@@ -200,24 +273,24 @@
                 </select>
               </div>
               <div class="field">
-                <label id="priceLabel">Precio por Kilo ($)</label>
+                <label for="price" id="priceLabel">Precio por Kilo ($)</label>
                 <input id="price" type="number" step="0.01" required placeholder="Ej. 2500">
               </div>
               <div class="field">
-                <label>Icono Emoji</label>
-                <input id="icon" placeholder="Ej. 🌿, 🍅" maxlength="4">
+                <label for="icon">Icono Emoji</label>
+                <input id="icon" placeholder="Ej. 🌿, 🍅, 🧀, 🍗" maxlength="4">
               </div>
               <div class="field">
-                <label>Orden de aparición</label>
-                <input id="display_order" type="number" value="1">
+                <label for="display_order">Orden de aparición</label>
+                <input id="display_order" type="number" value="1" placeholder="Ej. 1">
               </div>
               <div class="field full">
-                <label>URL de la Foto (Opcional)</label>
+                <label for="image_url">URL de la Foto del Producto (Opcional)</label>
                 <input id="image_url" type="url" placeholder="https://ejemplo.com/foto.jpg">
               </div>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-              <button class="btn" type="submit">Guardar Producto</button>
+              <button class="btn" type="submit" id="btnSave">Guardar Producto</button>
               <button class="btn btn-secondary" type="button" onclick="resetForm()">Cancelar</button>
             </div>
           </form>
@@ -228,20 +301,31 @@
           <div class="table-responsive">
             <table>
               <thead>
-                <tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th><th>Orden</th><th>Acciones</th></tr>
+                <tr>
+                  <th>Imagen</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Unidad</th>
+                  <th>Orden</th>
+                  <th>Acciones</th>
+                </tr>
               </thead>
-              <tbody id="productsTableBody"><tr><td colspan="7" style="text-align: center;">Cargando productos...</td></tr></tbody>
+              <tbody id="productsTableBody">
+                <tr><td colspan="7" style="text-align: center; color: var(--muted);">Cargando productos...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <!-- SECCIÓN 2: PEDIDOS -->
+      <!-- SECCIÓN 2: PEDIDOS REALIZADOS -->
       <section id="ordersView" class="view-section">
-        <h1 class="print-only-title">Lista Completa de Pedidos — Buenas Raíces</h1>
+        <h1 class="print-only-title" id="printReportTitle">Lista Completa de Pedidos — Buenas Raíces</h1>
+
         <div class="header-bar no-print">
           <div class="header-bar-left">
-            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()">☰</button>
+            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Menú">☰</button>
             <h1>Pedidos Realizados</h1>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -252,50 +336,163 @@
             <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar Pedidos</button>
           </div>
         </div>
-        <div id="ordersContainer"><p style="color: var(--muted);">Cargando pedidos...</p></div>
+
+        <div id="ordersContainer">
+          <p style="color: var(--muted);">Cargando pedidos...</p>
+        </div>
+
+        <div class="footer-actions no-print">
+          <div>
+            <h3 style="margin: 0 0 5px; font-size: 16px;">Exportar / Imprimir Lista Completa</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 13px;">Descargá o imprimí la lista global de todas las zonas.</p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn" onclick="printReport('full', 'ALL')">📄 PDF Pedidos Completo (Global)</button>
+            <button class="btn btn-secondary" onclick="printReport('delivery', 'ALL')">🚚 PDF Hoja de Reparto (Global)</button>
+          </div>
+        </div>
       </section>
 
-      <!-- SECCIÓN 3: CONTABILIDAD -->
+      <!-- SECCIÓN 3: CONTABILIDAD PROFESIONAL -->
       <section id="accountingView" class="view-section">
         <div class="header-bar no-print">
           <div class="header-bar-left">
-            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()">☰</button>
+            <button class="menu-toggle-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Menú">☰</button>
             <h1>Panel de Control Financiero</h1>
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <label style="font-weight: bold;">Filtrar Período:</label>
+            <label for="accPeriod" style="font-weight: bold; font-size: 14px;">Filtrar Período:</label>
             <select id="accPeriod" onchange="calculateAccounting()" style="font-weight: bold; padding: 8px 12px;">
               <option value="week">Semana Actual</option>
               <option value="month" selected>Mes Actual</option>
-              <option value="quarter">Trimestral</option>
+              <option value="quarter">Trimestral (Últimos 3 meses)</option>
             </select>
-          </div>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Ventas Reparto</div><div class="stat-value" id="statDeliverySales">$0</div><div style="font-size: 11px;" id="statDeliverySub">0 pedidos</div></div>
-          <div class="stat-card"><div class="stat-label">Ventas Tienda Física</div><div class="stat-value" id="statStoreSales" style="color: #2b78a0;">$0</div></div>
-          <div class="stat-card"><div class="stat-label">Total Ingresos Brutos</div><div class="stat-value" id="statTotalGross" style="color: var(--success);">$0</div></div>
-          <div class="stat-card"><div class="stat-label">Gastos Totales</div><div class="stat-value" id="statTotalExpenses" style="color: var(--danger);">$0</div></div>
-          <div class="stat-card" style="grid-column: 1 / -1; background: #f2f7ef; border: 2px solid var(--leaf);">
-            <div class="stat-label" style="font-size: 15px;">Balance Neto (Ganancia)</div>
-            <div class="stat-value" id="statNetProfit" style="font-size: 34px;">$0</div>
-            <div style="font-size: 12px; color: var(--muted);" id="statPeriodText"></div>
+            <button class="btn btn-secondary" onclick="calculateAccounting()">🔄 Recalcular</button>
           </div>
         </div>
 
+        <!-- RESUMEN DE BALANCES DUALES -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Ventas Reparto (Pedidos)</div>
+            <div class="stat-value" id="statDeliverySales">$0</div>
+            <div style="font-size: 11px; color: var(--muted);" id="statDeliverySub">0 pedidos entregados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ventas Tienda Física</div>
+            <div class="stat-value" id="statStoreSales" style="color: #2b78a0;">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Caja del local</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Ingresos Brutos</div>
+            <div class="stat-value" id="statTotalGross" style="color: var(--success);">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Reparto + Local</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Gastos Totales (Sueldos + Fijos)</div>
+            <div class="stat-value" id="statTotalExpenses" style="color: var(--danger);">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Proporcional al período</div>
+          </div>
+          <div class="stat-card" style="grid-column: 1 / -1; background: #f2f7ef; border: 2px solid var(--leaf);">
+            <div class="stat-label" style="font-size: 15px; color: var(--ink);">Balance Neto Estimado (Ganancia)</div>
+            <div class="stat-value" id="statNetProfit" style="font-size: 34px;">$0</div>
+            <div style="font-size: 12px; color: var(--muted);" id="statPeriodText">Período seleccionado</div>
+          </div>
+        </div>
+
+        <!-- CONFIGURACIÓN DE EGRESOS (SUELDOS Y GASTOS FIJOS TIENDA) -->
         <div class="card">
-          <h2>👥 Costos Fijos y Personal</h2>
+          <h2>👥 Configuración de Personal y Costos Fijos</h2>
           <div class="form-grid">
-            <div class="field"><label>🚚 Chofer ($ por día)</label><input id="driverDaily" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field"><label>Días por semana</label><input id="driverDays" type="number" value="6" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field"><label>📦 Chica 1 ($ Semanal)</label><input id="girl1Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field"><label>📦 Chica 2 ($ Semanal)</label><input id="girl2Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field"><label>📦 Chica 3 ($ Mensual)</label><input id="girl3Monthly" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field"><label>🏠 Alquiler ($ Mensual)</label><input id="storeRent" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
-            <div class="field full"><label>💡 Luz / Servicios ($ Mensual)</label><input id="storeElectric" type="number" value="0" oninput="saveAndRecalculateAcc()"></div>
+            <div class="field">
+              <label for="driverDaily">🚚 Chofer ($ Pago por día)</label>
+              <input id="driverDaily" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="driverDays">Días trabajados por semana</label>
+              <input id="driverDays" type="number" value="6" max="7" min="1" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl1Weekly">📦 Chica 1 ($ Pago Semanal)</label>
+              <input id="girl1Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl2Weekly">📦 Chica 2 ($ Pago Semanal)</label>
+              <input id="girl2Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl3Monthly">📦 Chica 3 ($ Pago Mensual)</label>
+              <input id="girl3Monthly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="storeRent">🏠 Alquiler Tienda Física ($ Mensual)</label>
+              <input id="storeRent" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field full">
+              <label for="storeElectric">💡 Luz / Servicios Tienda Física ($ Mensual)</label>
+              <input id="storeElectric" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+          </div>
+        </div>
+
+        <!-- ANEXO TIENDA FÍSICA -->
+        <div class="card">
+          <h2>🏪 Anexo: Registro Diarios de Ventas en Tienda Física</h2>
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">Ingresá la caja total obtenida día a día en el local para sumar a los totales generales.</p>
+          
+          <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
+            <div class="field">
+              <label for="storeSaleDate">Fecha</label>
+              <input id="storeSaleDate" type="date">
+            </div>
+            <div class="field">
+              <label for="storeSaleAmount">Monto Recaudado ($)</label>
+              <input id="storeSaleAmount" type="number" step="0.01" placeholder="Ej. 45000">
+            </div>
+            <div class="field">
+              <button class="btn btn-success" type="button" onclick="addStoreDailySale()">+ Registrar Día</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Ingreso Local</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="storeSalesTableBody">
+                <tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias registradas para la tienda física.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HISTORIAL COMPLETO DE REPARTO -->
+        <div class="card">
+          <h2>Historial de Pedidos Entregados (Reparto)</h2>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>N° Pedido</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Zona</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="accountingTableBody">
+                <tr><td colspan="6" style="text-align: center; color: var(--muted);">Cargando registros contables...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
+
     </main>
   </div>
 
@@ -304,26 +501,46 @@
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
-        <button class="btn btn-secondary btn-sm" onclick="closeSummaryModal()">✕ Cerrar</button>
+        <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
       </div>
+      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección (desglosando los combos automáticamente):</p>
+      
       <div class="table-responsive">
         <table>
-          <thead><tr><th>Producto</th><th>Cantidad Total Requerida</th></tr></thead>
-          <tbody id="summaryTableBody"></tbody>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad Total Solicitada</th>
+              <th>Incluido en</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+            <!-- Se llena dinámicamente -->
+          </tbody>
         </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;" class="no-print">
+        <button class="btn btn-secondary" onclick="closeSummaryModal()">Cerrar</button>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir Resumen</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: CONFIGURAR COMPONENTES DE COMBOS (CORREGIDO) -->
+  <!-- MODAL: CONFIGURAR COMPONENTES DE COMBOS -->
   <div id="comboModal" class="modal-overlay" style="display: none;">
     <div class="modal-card" style="max-width: 650px;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin: 0; font-size: 20px;" id="comboModalTitle">⚙️ Configurar Componentes de Combo</h2>
         <button class="btn btn-secondary btn-sm" onclick="closeComboModal()">✕ Cerrar</button>
       </div>
+      
       <input type="hidden" id="configComboId">
       
+      <div style="background: #f3edd9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13.5px;">
+        Agregá los productos y cantidades que incluye este combo para que el <b>Resumen de Armado</b> y la tienda los muestren correctamente.
+      </div>
+
       <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto; align-items: flex-end; margin-bottom: 20px;">
         <div class="field">
           <label>Producto componente:</label>
@@ -348,12 +565,50 @@
 
       <div class="table-responsive">
         <table>
-          <thead><tr><th>Producto Componente</th><th>Cantidad</th><th>Unidad</th><th>Acción</th></tr></thead>
-          <tbody id="comboComponentsTableBody"><tr><td colspan="4" style="text-align:center;">Seleccioná los componentes del combo.</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>Producto Componente</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="comboComponentsTableBody">
+            <tr><td colspan="4" style="text-align:center; color: var(--muted);">Seleccioná los componentes del combo.</td></tr>
+          </tbody>
         </table>
       </div>
-      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
         <button class="btn" onclick="closeComboModal()">Terminar / Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Agregar Producto a un Pedido -->
+  <div id="addItemModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 500px;">
+      <h3 style="margin-top:0;">Agregar Producto al Pedido</h3>
+      <input type="hidden" id="modalOrderId">
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Seleccionar Producto del Catálogo:</label>
+        <select id="modalProductSelect" onchange="onModalProductChange()"></select>
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Precio Unitario / Kg ($):</label>
+        <input id="modalUnitPrice" type="number" step="0.01">
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Cantidad (Unidades):</label>
+        <input id="modalUnits" type="number" value="1" min="1">
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label>Peso Real / Kilos:</label>
+        <input id="modalWeight" type="number" step="0.01" value="1">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="closeAddItemModal()">Cancelar</button>
+        <button class="btn" onclick="saveNewOrderItem()">Agregar Ítem</button>
       </div>
     </div>
   </div>
@@ -368,8 +623,10 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
+    // --- LÓGICA DE AUTENTICACIÓN ---
     async function checkAuth() {
       const { data: { session } } = await db.auth.getSession();
+      
       if (session) {
         document.getElementById('loginScreen').style.display = 'none';
         loadProducts();
@@ -383,10 +640,15 @@
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
-      const { error } = await db.auth.signInWithPassword({ email, password });
+      const errorEl = document.getElementById('loginError');
+      
+      errorEl.style.display = 'none';
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+
       if (error) {
-        document.getElementById('loginError').textContent = 'Credenciales inválidas: ' + error.message;
-        document.getElementById('loginError').style.display = 'block';
+        errorEl.textContent = 'Credenciales inválidas: ' + error.message;
+        errorEl.style.display = 'block';
       } else {
         document.getElementById('loginScreen').style.display = 'none';
         loadProducts();
@@ -400,16 +662,56 @@
     }
 
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+    }
+
+    function isButcherCategory(catName) {
+      if (!catName) return false;
+      const c = catName.toLowerCase().trim();
+      return c === 'carne vacuna' || c === 'carnes de cerdo' || c === 'pollo';
+    }
+
+    function handleEnterKey(event, itemId, orderId, unitPrice, saleUnit) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        triggerItemSave(itemId, orderId, unitPrice, saleUnit);
+        if (event.target) event.target.blur();
+      }
+    }
+
+    function triggerItemSave(itemId, orderId, unitPrice, saleUnit) {
+      const unitsInput = document.getElementById(`units-${itemId}`);
+      const weightInput = document.getElementById(`weight-${itemId}`);
+      
+      const newUnits = unitsInput ? unitsInput.value : 1;
+      const newWeight = weightInput ? weightInput.value : 1;
+
+      updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit);
+    }
+
+    function updatePriceLabel() {
+      const unit = document.getElementById('sale_unit').value;
+      const label = document.getElementById('priceLabel');
+      if (unit === 'kg') label.textContent = 'Precio por Kilo ($)';
+      else if (unit === '1g') label.textContent = 'Precio por Gramo ($)';
+      else if (unit === 'unidad_peso') label.textContent = 'Precio por Kilo ($) [Se vende por unidad]';
+      else label.textContent = 'Precio por Unidad ($)';
     }
 
     function switchView(viewId, element) {
       document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
       document.getElementById(viewId).classList.add('active');
       element.classList.add('active');
+
       if (viewId === 'ordersView') loadOrders();
-      if (viewId === 'accountingView') { loadSavedConfig(); loadOrders().then(() => calculateAccounting()); }
+      if (viewId === 'accountingView') {
+        loadSavedConfig();
+        loadOrders().then(() => calculateAccounting());
+      }
     }
 
     function showNotice(msg) {
@@ -419,6 +721,7 @@
       setTimeout(() => notice.style.display = 'none', 4000);
     }
 
+    // --- PRODUCTOS ---
     async function loadProducts() {
       const { data } = await db.from('products').select('*').order('display_order', { ascending: true });
       allProducts = data || [];
@@ -427,7 +730,11 @@
 
     function renderTable() {
       const tbody = document.getElementById('productsTableBody');
-      if (!allProducts.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay productos.</td></tr>'; return; }
+      if (!allProducts.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted);">No hay productos registrados aún.</td></tr>';
+        return;
+      }
+
       tbody.innerHTML = allProducts.map(p => {
         const isCombo = (p.category || '').toLowerCase() === 'combos';
         return `
@@ -461,8 +768,10 @@
         image_url: document.getElementById('image_url').value.trim() || null,
         active: true
       };
+
       if (prodId) await db.from('products').update(payload).eq('id', prodId);
       else await db.from('products').insert(payload);
+
       showNotice(prodId ? '¡Producto actualizado!' : '¡Producto creado!');
       resetForm();
       loadProducts();
@@ -479,12 +788,14 @@
       document.getElementById('icon').value = p.icon || '';
       document.getElementById('display_order').value = p.display_order || 1;
       document.getElementById('image_url').value = p.image_url || '';
+      document.getElementById('formTitle').textContent = 'Editar Producto: ' + p.name;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetForm() {
       document.getElementById('prodId').value = '';
       document.getElementById('productForm').reset();
+      document.getElementById('formTitle').textContent = 'Agregar Producto';
     }
 
     async function deleteProduct(id, name) {
@@ -493,7 +804,7 @@
       loadProducts();
     }
 
-    // --- GESTIÓN DE COMBOS CORREGIDA ---
+    // --- GESTIÓN DE COMPONENTES DE COMBOS ---
     async function openComboModal(comboId, comboName) {
       document.getElementById('configComboId').value = comboId;
       document.getElementById('comboModalTitle').textContent = `⚙️ Configurar Combo: ${comboName}`;
@@ -522,7 +833,7 @@
 
       tbody.innerHTML = data.map(item => {
         const compProd = allProducts.find(p => p.id === item.component_product_id);
-        const compName = compProd ? compProd.name : 'Producto desconocido';
+        const compName = compProd ? compProd.name : 'Producto';
         return `
           <tr>
             <td><b>${compName}</b></td>
@@ -567,12 +878,20 @@
       loadComboComponents(comboId);
     }
 
+    // --- CARGAR Y GESTIONAR PEDIDOS ---
     async function loadOrders() {
       const container = document.getElementById('ordersContainer');
       if (container) container.innerHTML = '<p style="color: var(--muted);">Cargando pedidos...</p>';
+
       if (!allProducts.length) await loadProducts();
 
-      const { data } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
+      const { data, error } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
+
+      if (error) {
+        if (container) container.innerHTML = '<p style="color: var(--danger);">Error al cargar pedidos: ' + error.message + '</p>';
+        return;
+      }
+
       rawOrders = (data || []).filter(order => order.order_items && order.order_items.length > 0);
       
       populateZoneFilter();
@@ -582,21 +901,35 @@
     function populateZoneFilter() {
       const select = document.getElementById('zoneFilter');
       if (!select) return;
+      const current = select.value;
       const zones = [...new Set(rawOrders.map(o => (o.zone || o.city || 'Sin Zona').trim()))].sort();
-      select.innerHTML = '<option value="ALL">Todas las Zonas</option>' + zones.map(z => `<option value="${z}">${z}</option>`).join('');
+      
+      select.innerHTML = '<option value="ALL">Todas las Zonas</option>' + 
+        zones.map(z => `<option value="${z}">${z}</option>`).join('');
+      
+      select.value = current;
     }
 
     function filterOrdersByZone() {
       const select = document.getElementById('zoneFilter');
-      const selectedZone = select ? select.value : 'ALL';
-      let filtered = selectedZone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+      if (!select) return;
+      const selectedZone = select.value;
+      let filtered = rawOrders;
+
+      if (selectedZone !== 'ALL') {
+        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+      }
+
       renderOrdersGroupedByZone(filtered);
     }
 
     function renderOrdersGroupedByZone(ordersList) {
       const container = document.getElementById('ordersContainer');
       if (!container) return;
-      if (!ordersList.length) { container.innerHTML = '<div class="card"><p style="margin:0; color: var(--muted);">No hay pedidos.</p></div>'; return; }
+      if (!ordersList || ordersList.length === 0) {
+        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos para mostrar.</p></div>';
+        return;
+      }
 
       const grouped = {};
       ordersList.forEach(order => {
@@ -605,78 +938,261 @@
         grouped[zoneName].push(order);
       });
 
-      container.innerHTML = Object.entries(grouped).map(([zone, zoneOrders]) => `
-        <div class="zone-group">
-          <div class="zone-header">
-            <span>Zona: ${zone} (${zoneOrders.length})</span>
-            <button class="btn btn-sm btn-success" onclick="openSummaryModal('${zone}')">📋 Resumen Armado Zona</button>
-          </div>
-          ${zoneOrders.map(order => `
-            <div class="order-card">
-              <div class="order-header">
-                <div><b>Pedido #${order.id}</b> — ${order.customer_name || 'Sin nombre'} (${order.phone || ''})</div>
-                <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')">Eliminar</button>
+      let html = '';
+
+      for (const [zone, zoneOrders] of Object.entries(grouped)) {
+        html += `
+          <div class="zone-group" id="zone-group-${zone.replace(/\s+/g, '-')}">
+            <div class="zone-header">
+              <div>
+                <span>Zona: ${zone}</span>
+                <span style="font-size: 14px; font-weight: normal; margin-left: 8px;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
               </div>
-              <div><b>Dirección:</b> ${order.address || ''} (${order.city || ''})</div>
+              <div class="no-print" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-success" onclick="openSummaryModal('${zone}')">📋 Resumen Armado Zona</button>
+                <button class="btn btn-sm" onclick="printReport('full', '${zone}')">📄 Pedidos Zona</button>
+                <button class="btn btn-secondary btn-sm" onclick="printReport('delivery', '${zone}')">🚚 Reparto Zona</button>
+              </div>
             </div>
-          `).join('')}
+            ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderSingleOrderCard(order) {
+      const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
+      const isDeliveryMode = document.body.classList.contains('is-delivery-mode');
+      const isDelivered = order.status === 'Entregado';
+
+      let totalCalculado = 0;
+      let itemsRows = '';
+
+      if (order.order_items && order.order_items.length > 0) {
+        const itemsToRender = isDeliveryMode 
+          ? order.order_items.filter(item => {
+              let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+              const cat = item.category || (catalogProd ? catalogProd.category : '') || '';
+              return isButcherCategory(cat);
+            })
+          : order.order_items;
+
+        itemsRows = itemsToRender.map(item => {
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+          
+          const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
+          const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
+          
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
+          
+          const subtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
+          totalCalculado += subtotal;
+
+          return `
+            <tr>
+              <td><b>${item.product_name}</b></td>
+              <td>
+                <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                  <label style="font-size: 11px;">Cant:
+                    <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
+                      style="width: 55px; padding: 3px;"
+                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                  </label>
+                  <label style="font-size: 11px;">Kg:
+                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${weight}" 
+                      style="width: 65px; padding: 3px;"
+                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                  </label>
+                  <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
+                </div>
+                <span class="print-only">
+                  ${units} un. (${weight} kg)
+                </span>
+              </td>
+              <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
+              <td class="price-col"><b style="color: var(--leaf);">${money(subtotal)}</b></td>
+              <td class="no-print" style="text-align: right;">
+                <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}', '${order.id}')">✕</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
+
+      return `
+        <div class="order-card" id="order-card-${order.id}">
+          <div class="order-header no-print">
+            <div>
+              <span class="order-title">Pedido #${order.id}</span>
+              <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
+              <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
+                ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
+              </span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
+                ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
+            </div>
+          </div>
+
+          <div class="order-info">
+            <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
+            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+            <div style="grid-column: 1 / -1; font-size: 15px;"><b>Dirección de Entrega:</b> <span style="text-decoration: underline;">${customerAddress}</span></div>
+            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
+            ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+          </div>
+
+          <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
+          <table class="order-items-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad / Peso Real</th>
+                <th class="price-col">Precio Unit. / Kg</th>
+                <th class="price-col">Subtotal</th>
+                <th class="no-print" style="width: 40px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <div class="no-print" style="margin-top: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="openAddItemModal('${order.id}')">+ Agregar Producto a este Pedido</button>
+          </div>
+
+          <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 18px; border-top: 1px dashed var(--line); padding-top: 10px;">
+            <b>Total del Pedido: <span style="color: var(--leaf); font-size: 20px;">${money(totalCalculado)}</span></b>
+          </div>
         </div>
-      `).join('');
+      `;
     }
 
-    async function deleteFullOrder(orderId) {
-      if (!confirm('¿Eliminar pedido?')) return;
-      await db.from('order_items').delete().eq('order_id', orderId);
-      await db.from('orders').delete().eq('id', orderId);
-      loadOrders();
-    }
-
-    // --- RESUMEN DE ARMADO CON DESGLOSE DE COMBOS ---
+    // --- RESUMEN DE ARMADO / CONSOLIDADO CON DESGLOSE DE COMBOS ---
     async function openSummaryModal(zone) {
-      let filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
-      document.getElementById('summaryModalTitle').textContent = `📋 Resumen de Armado - ${zone}`;
+      let filtered = rawOrders;
+      const title = document.getElementById('summaryModalTitle');
+      
+      if (zone !== 'ALL') {
+        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
+        title.textContent = `📋 Resumen de Armado - Zona: ${zone}`;
+      } else {
+        title.textContent = `📋 Resumen de Armado General (Todas las Zonas)`;
+      }
 
       const summary = {};
 
+      function addStoSummary(name, totalUnits, totalWeight, unit) {
+        const key = name.trim();
+        if (!summary[key]) {
+          summary[key] = { name: key, totalUnits: 0, totalWeight: 0, unit: unit, ordersCount: 0 };
+        }
+        summary[key].totalUnits += totalUnits;
+        summary[key].totalWeight += totalWeight;
+        summary[key].ordersCount += 1;
+      }
+
       for (const order of filtered) {
         if (!order.order_items) continue;
+        
         for (const item of order.order_items) {
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === item.product_name.trim().toLowerCase());
+          const productName = item.product_name.trim();
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
+          
           const units = item.units_quantity || 1;
-          const weight = item.weight_quantity || item.quantity || 1;
+          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
 
+          // Si es un combo y tiene componentes configurados, los desglosamos
           if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
             const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
+            
             if (comboComponents && comboComponents.length > 0) {
               comboComponents.forEach(comp => {
                 const compProduct = allProducts.find(p => p.id === comp.component_product_id);
                 if (compProduct) {
-                  let key = compProduct.name;
-                  if (!summary[key]) summary[key] = { total: 0, unit: comp.unit_type || 'kg' };
-                  summary[key].total += Number(comp.quantity) * weight;
+                  const compUnits = Number(comp.quantity) * units;
+                  const compWeight = Number(comp.quantity) * weight;
+                  addStoSummary(compProduct.name, compUnits, compWeight, comp.unit_type || compProduct.sale_unit || 'kg');
                 }
               });
             } else {
-              let key = item.product_name;
-              if (!summary[key]) summary[key] = { total: 0, unit: item.sale_unit || 'un' };
-              summary[key].total += units;
+              addStoSummary(productName, units, weight, unit);
             }
           } else {
-            let key = item.product_name;
-            if (!summary[key]) summary[key] = { total: 0, unit: item.sale_unit || 'kg' };
-            summary[key].total += weight;
+            addStoSummary(productName, units, weight, unit);
           }
         }
       }
 
       const tbody = document.getElementById('summaryTableBody');
-      const items = Object.entries(summary);
-      tbody.innerHTML = items.length ? items.map(([name, data]) => `<tr><td><b>${name}</b></td><td>${data.total.toFixed(2)} ${data.unit}</td></tr>`).join('') : '<tr><td colspan="2">No hay productos.</td></tr>';
+      const items = Object.values(summary);
+
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay productos para mostrar en este resumen.</td></tr>';
+      } else {
+        tbody.innerHTML = items.map(i => {
+          let qtyText = '';
+          if (i.unit === 'kg' || i.unit === 'unidad_peso' || i.unit === '1g') {
+            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalWeight.toFixed(2)} kg</b> (${i.totalUnits} un.)`;
+          } else {
+            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalUnits} ${i.unit}</b>`;
+          }
+
+          return `
+            <tr>
+              <td><b>${i.name}</b></td>
+              <td>${qtyText}</td>
+              <td>Pedidos generales</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
       document.getElementById('summaryModal').style.display = 'flex';
     }
 
-    function closeSummaryModal() { document.getElementById('summaryModal').style.display = 'none'; }
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').style.display = 'none';
+    }
 
+    async function toggleOrderStatus(orderId, newStatus) {
+      const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
+      if (error) {
+        showNotice('Error al actualizar el estado: ' + error.message);
+        return;
+      }
+      showNotice(`Pedido marcado como ${newStatus}`);
+      await loadOrders();
+      if (document.getElementById('accountingView').classList.contains('active')) {
+        calculateAccounting();
+      }
+    }
+
+    function calculateOrderTotal(order) {
+      if (!order.order_items || order.order_items.length === 0) return 0;
+      return order.order_items.reduce((sum, item) => {
+        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+        const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
+        const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
+        const units = item.units_quantity || 1;
+        const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+        const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
+        return sum + (isWeightBased ? (weight * unitPrice) : (units * unitPrice));
+      }, 0);
+    }
+
+    // --- CONTABILIDAD Y BALANCES AVANZADOS ---
     function saveAndRecalculateAcc() {
       const config = {
         driverDaily: parseFloat(document.getElementById('driverDaily').value) || 0,
@@ -688,6 +1204,7 @@
         storeElectric: parseFloat(document.getElementById('storeElectric').value) || 0,
       };
       localStorage.setItem('buenasraices_acc_config', JSON.stringify(config));
+      calculateAccounting();
     }
 
     function loadSavedConfig() {
@@ -702,19 +1219,268 @@
         document.getElementById('storeRent').value = c.storeRent || 0;
         document.getElementById('storeElectric').value = c.storeElectric || 0;
       }
+      
+      const savedSales = localStorage.getItem('buenasraices_store_sales');
+      if (savedSales) {
+        storeDailySales = JSON.parse(savedSales);
+      }
+      renderStoreSalesTable();
+    }
+
+    function addStoreDailySale() {
+      const dateVal = document.getElementById('storeSaleDate').value;
+      const amountVal = parseFloat(document.getElementById('storeSaleAmount').value);
+
+      if (!dateVal || isNaN(amountVal) || amountVal <= 0) {
+        alert('Por favor ingrese una fecha y un monto válido.');
+        return;
+      }
+
+      storeDailySales.push({ id: Date.now(), date: dateVal, amount: amountVal });
+      localStorage.setItem('buenasraices_store_sales', JSON.stringify(storeDailySales));
+      
+      document.getElementById('storeSaleAmount').value = '';
+      renderStoreSalesTable();
+      calculateAccounting();
+      showNotice('Venta diaria registrada con éxito');
+    }
+
+    function deleteStoreSale(id) {
+      storeDailySales = storeDailySales.filter(item => item.id !== id);
+      localStorage.setItem('buenasraices_store_sales', JSON.stringify(storeDailySales));
+      renderStoreSalesTable();
+      calculateAccounting();
+    }
+
+    function renderStoreSalesTable() {
+      const tbody = document.getElementById('storeSalesTableBody');
+      if (!tbody) return;
+      if (!storeDailySales.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias registradas para la tienda física.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = storeDailySales.sort((a,b) => new Date(b.date) - new Date(a.date)).map(s => `
+        <tr>
+          <td><b>${new Date(s.date + 'T00:00:00').toLocaleDateString('es-AR')}</b></td>
+          <td><b style="color: var(--leaf);">${money(s.amount)}</b></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteStoreSale(${s.id})">✕ Eliminar</button></td>
+        </tr>
+      `).join('');
     }
 
     function calculateAccounting() {
+      const period = document.getElementById('accPeriod').value;
+      const now = new Date();
+
+      let startDate = new Date();
+      let weeksFactor = 1;
+
+      if (period === 'week') {
+        const day = now.getDay();
+        const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+        startDate = new Date(now.setDate(diffToMonday));
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 1;
+        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente a la Semana Actual';
+      } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 4.33;
+        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente al Mes Actual (4.33 semanas)';
+      } else if (period === 'quarter') {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 13;
+        document.getElementById('statPeriodText').textContent = 'Cálculo acumulado del Trimestre (13 semanas)';
+      }
+
+      // 1. Ingresos Reparto
       let deliverySales = 0;
+      let deliveredCount = 0;
+      const deliveredOrders = [];
+
       rawOrders.forEach(order => {
-        let orderTotal = (order.order_items || []).reduce((sum, item) => sum + ((item.weight_quantity || 1) * (item.unit_price || 0)), 0);
-        deliverySales += orderTotal;
+        const orderTotal = calculateOrderTotal(order);
+        const isDelivered = order.status === 'Entregado';
+        const orderDate = new Date(order.created_at || Date.now());
+
+        if (isDelivered) {
+          if (orderDate >= startDate) {
+            deliverySales += orderTotal;
+            deliveredCount++;
+            deliveredOrders.push({ ...order, computedTotal: orderTotal });
+          }
+        }
       });
+
+      // 2. Ingresos Tienda Física
+      let storeSalesTotal = 0;
+      storeDailySales.forEach(s => {
+        const sDate = new Date(s.date + 'T00:00:00');
+        if (sDate >= startDate) {
+          storeSalesTotal += s.amount;
+        }
+      });
+
+      // 3. Egresos
+      const driverDaily = parseFloat(document.getElementById('driverDaily').value) || 0;
+      const driverDays = parseFloat(document.getElementById('driverDays').value) || 0;
+      const girl1 = parseFloat(document.getElementById('girl1Weekly').value) || 0;
+      const girl2 = parseFloat(document.getElementById('girl2Weekly').value) || 0;
+      const girl3Monthly = parseFloat(document.getElementById('girl3Monthly').value) || 0;
+      
+      const rent = parseFloat(document.getElementById('storeRent').value) || 0;
+      const electric = parseFloat(document.getElementById('storeElectric').value) || 0;
+
+      const weeklyPayroll = (driverDaily * driverDays) + girl1 + girl2 + (girl3Monthly / 4.33);
+      const weeklyFixedCosts = (rent + electric) / 4.33;
+
+      const totalExpenses = (weeklyPayroll + weeklyFixedCosts) * weeksFactor;
+      const grossIncome = deliverySales + storeSalesTotal;
+      const netProfit = grossIncome - totalExpenses;
+
+      // Actualizar DOM
       document.getElementById('statDeliverySales').textContent = money(deliverySales);
-      document.getElementById('statTotalGross').textContent = money(deliverySales);
-      document.getElementById('statNetProfit').textContent = money(deliverySales);
+      document.getElementById('statDeliverySub').textContent = `${deliveredCount} pedidos entregados`;
+      document.getElementById('statStoreSales').textContent = money(storeSalesTotal);
+      document.getElementById('statTotalGross').textContent = money(grossIncome);
+      document.getElementById('statTotalExpenses').textContent = money(totalExpenses);
+
+      const netElem = document.getElementById('statNetProfit');
+      netElem.textContent = money(netProfit);
+      netElem.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+      // Tabla Historial
+      const tbody = document.getElementById('accountingTableBody');
+      if (!deliveredOrders.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados en este período.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = deliveredOrders.map(o => `
+        <tr>
+          <td><b>#${o.id}</b></td>
+          <td>${new Date(o.created_at).toLocaleDateString('es-AR')}</td>
+          <td>${o.customer_name || 'Sin nombre'}</td>
+          <td>${o.zone || o.city || 'Sin Zona'}</td>
+          <td><b style="color: var(--leaf);">${money(o.computedTotal)}</b></td>
+          <td><span class="badge-status badge-delivered">Entregado</span></td>
+        </tr>
+      `).join('');
     }
 
+    async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
+      let units = parseFloat(newUnits);
+      let weight = parseFloat(newWeight);
+
+      if (isNaN(units) || units < 1) units = 1;
+      if (isNaN(weight) || weight < 0) weight = 0;
+
+      const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
+      const quantity = isWeightBased ? weight : units;
+
+      const { error } = await db.from('order_items').update({
+        units_quantity: units,
+        weight_quantity: weight,
+        quantity: quantity
+      }).eq('id', itemId);
+
+      if (error) {
+        showNotice('Error al actualizar ítem: ' + error.message);
+      } else {
+        showNotice('¡Ítem actualizado!');
+        loadOrders();
+      }
+    }
+
+    async function deleteOrderItem(itemId, orderId) {
+      if (!confirm('¿Eliminar este ítem del pedido?')) return;
+      await db.from('order_items').delete().eq('id', itemId);
+      showNotice('Ítem eliminado');
+      loadOrders();
+    }
+
+    async function deleteFullOrder(orderId) {
+      if (!confirm(`¿Estás seguro de eliminar el pedido #${orderId} por completo?`)) return;
+      await db.from('order_items').delete().eq('order_id', orderId);
+      await db.from('orders').delete().eq('id', orderId);
+      showNotice('Pedido eliminado por completo');
+      loadOrders();
+    }
+
+    // Modal
+    function openAddItemModal(orderId) {
+      document.getElementById('modalOrderId').value = orderId;
+      const select = document.getElementById('modalProductSelect');
+      select.innerHTML = allProducts.map(p => `<option value="${p.id}">${p.name} (${money(p.price_per_kg)} / ${p.sale_unit || 'kg'})</option>`).join('');
+      onModalProductChange();
+      document.getElementById('addItemModal').style.display = 'flex';
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').style.display = 'none';
+    }
+
+    function onModalProductChange() {
+      const prodId = document.getElementById('modalProductSelect').value;
+      const prod = allProducts.find(p => p.id === prodId);
+      if (prod) {
+        document.getElementById('modalUnitPrice').value = prod.price_per_kg;
+      }
+    }
+
+    async function saveNewOrderItem() {
+      const orderId = document.getElementById('modalOrderId').value;
+      const prodId = document.getElementById('modalProductSelect').value;
+      const prod = allProducts.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || prod.price_per_kg;
+      const units = parseFloat(document.getElementById('modalUnits').value) || 1;
+      const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
+
+      const payload = {
+        order_id: orderId,
+        product_name: prod.name,
+        category: prod.category,
+        unit_price: unitPrice,
+        sale_unit: prod.sale_unit || 'kg',
+        units_quantity: units,
+        weight_quantity: weight,
+        quantity: (prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso' || prod.sale_unit === '1g') ? weight : units
+      };
+
+      const { error } = await db.from('order_items').insert(payload);
+      if (error) {
+        showNotice('Error al agregar ítem: ' + error.message);
+      } else {
+        showNotice('¡Ítem agregado con éxito!');
+        closeAddItemModal();
+        loadOrders();
+      }
+    }
+
+    function printReport(mode, zone) {
+      if (mode === 'delivery') {
+        document.body.classList.add('is-delivery-mode');
+      } else {
+        document.body.classList.remove('is-delivery-mode');
+      }
+
+      const zoneFilterSelect = document.getElementById('zoneFilter');
+      if (zoneFilterSelect) {
+        zoneFilterSelect.value = zone;
+        filterOrdersByZone();
+      }
+
+      setTimeout(() => {
+        window.print();
+        document.body.classList.remove('is-delivery-mode');
+      }, 300);
+    }
+
+    // Inicialización y verificación de usuario
     checkAuth();
   </script>
 </body>
