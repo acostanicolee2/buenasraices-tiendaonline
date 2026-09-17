@@ -1010,33 +1010,38 @@ async function addComboComponent() {
         }).join('');
       }
 
-      const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
+      const street = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
+    const entrecalles = order.entrecalles || order.cross_streets || order.entre_calles || '';
+    const localidad = order.zone || order.city || order.localidad || 'Sin Localidad';
 
-      return `
-        <div class="order-card" id="order-card-${order.id}">
-          <div class="order-header no-print">
-            <div>
-              <span class="order-title">Pedido #${order.id}</span>
-              <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
-              <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
-                ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
-              </span>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
-                ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
-            </div>
+    return `
+      <div class="order-card" id="order-card-${order.id}">
+        <div class="order-header no-print">
+          <div>
+            <span class="order-title">Pedido #${order.id}</span>
+            <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
+            <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
+              ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
+              ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
+          </div>
+        </div>
+
+        <div class="order-info">
+          <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
+          <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+          
+          <div style="grid-column: 1 / -1; font-size: 15px;">
+            <b>Dirección:</b> <span style="text-decoration: underline;">${street}</span>${entrecalles ? `<br><b>Entrecalles:</b> ${entrecalles}` : ''}
           </div>
 
-          <div class="order-info">
-            <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
-            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-            <div style="grid-column: 1 / -1; font-size: 15px;"><b>Dirección de Entrega:</b> <span style="text-decoration: underline;">${customerAddress}</span></div>
-            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
-            ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
-          </div>
+          <div><b>Localidad / Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${localidad}</span></div>${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+        </div>
 
           <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
           <table class="order-items-table">
