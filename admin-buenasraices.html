@@ -991,13 +991,13 @@
             <tr>
               <td><b>${item.product_name}</b></td>
               <td>
-                <div class="no-print" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                  <label style="font-size: 11px;">Cant:
+                <div class="no-print" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <label style="font-size: 11px;">Pedido (Cant):
                     <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
                       style="width: 55px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <label style="font-size: 11px;">${saleUnit === 'kg' ? 'Kg' : 'Cant'}:
+                  <label style="font-size: 11px;">Real (${saleUnit === 'kg' ? 'Kg' : 'Cant'}):
                     <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
                       style="width: 65px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
@@ -1005,7 +1005,7 @@
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  ${isWeightBased ? `${defaultWeight}${saleUnit}` : `${units} un.`}
+                  Pedido: ${units} un. | Real: ${defaultWeight} ${saleUnit}
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -1067,7 +1067,7 @@
             <thead>
               <tr>
                 <th>Producto</th>
-                <th>Cantidad / Peso Real</th>
+                <th>Cant. Pedida / Peso o Cant. Real</th>
                 <th class="price-col">Precio Unit. / Kg</th>
                 <th class="price-col">Subtotal</th>
                 <th class="no-print" style="width: 40px;"></th>
