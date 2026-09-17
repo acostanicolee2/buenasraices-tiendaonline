@@ -115,9 +115,9 @@
     .badge-pending { background: #fff3cd; color: #856404; }
     .badge-delivered { background: #d4edda; color: #155724; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .stat-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); text-align: center; }
-    .stat-value { font-size: 28px; font-weight: bold; color: var(--leaf); margin: 10px 0 5px; }
+    .stat-value { font-size: 26px; font-weight: bold; color: var(--leaf); margin: 10px 0 5px; }
     .stat-label { font-size: 13px; color: var(--muted); font-weight: 600; }
 
     .notice { padding: 12px 16px; border-radius: 10px; background: #edf5df; color: #385a35; margin-bottom: 20px; font-weight: 600; display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: var(--shadow); }
@@ -168,6 +168,27 @@
 </head>
 <body>
 
+  <!-- MODAL DE INICIO DE SESIÓN -->
+  <div id="loginScreen" class="modal-overlay" style="display: flex; background: var(--cream); z-index: 10000;">
+    <div class="card" style="width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow);">
+      <h2 style="margin-bottom: 5px; font-family: Georgia, serif; font-size: 28px;">Buenas<i>raíces</i></h2>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Ingresá tus credenciales para acceder al panel</p>
+      
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="field" style="margin-bottom: 12px; text-align: left;">
+          <label for="loginEmail">Correo electrónico</label>
+          <input type="email" id="loginEmail" required placeholder="admin@buenasraices.com">
+        </div>
+        <div class="field" style="margin-bottom: 20px; text-align: left;">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button class="btn" type="submit" style="width: 100%; justify-content: center; padding: 12px;">Ingresar al Panel</button>
+      </form>
+      <p id="loginError" style="color: var(--danger); font-size: 13px; margin-top: 15px; display: none;"></p>
+    </div>
+  </div>
+
   <div class="admin-layout">
     
     <!-- SIDEBAR / MENÚ LATERAL -->
@@ -183,10 +204,13 @@
           <span class="icon">📦</span> Pedidos
         </a>
         <a class="nav-item" onclick="switchView('accountingView', this)">
-          <span class="icon">📊</span> Contabilidad y Ventas
+          <span class="icon">📊</span> Contabilidad General
+        </a>
+        <a class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f87171;">
+          <span class="icon">🚪</span> Cerrar Sesión
         </a>
       </nav>
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.1</div>
+      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.3</div>
     </aside>
 
     <!-- CONTENIDO PRINCIPAL -->
@@ -210,7 +234,7 @@
             <div class="form-grid">
               <div class="field">
                 <label for="name">Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Orégano, Tomate, Pollo Entero">
+                <input id="name" required placeholder="Ej. Orégano, Tomate, Combo Verde">
               </div>
               <div class="field">
                 <label for="category">Categoría</label>
@@ -225,6 +249,7 @@
                   <option value="Miel">Miel</option>
                   <option value="Combos">Combos</option>
                   <option value="Mermeladas/dulces">Mermeladas/dulces</option>
+                  <option value="Conservas">Conservas</option> 
                   <option value="Especias para el mate">Especias para el mate</option>
                   <option value="Carne Vacuna">Carne Vacuna</option>
                   <option value="Carnes de Cerdo">Carnes de Cerdo</option>
@@ -328,41 +353,126 @@
         </div>
       </section>
 
-      <!-- SECCIÓN 3: CONTABILIDAD Y ESTADÍSTICAS -->
+      <!-- SECCIÓN 3: CONTABILIDAD PROFESIONAL -->
       <section id="accountingView" class="view-section">
         <div class="header-bar no-print">
           <div class="header-bar-left">
             <button class="menu-toggle-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Menú">☰</button>
-            <h1>Contabilidad y Ventas Semanales</h1>
+            <h1>Panel de Control Financiero</h1>
           </div>
-          <button class="btn btn-secondary" onclick="calculateAccounting()">🔄 Recalcular Totales</button>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <label for="accPeriod" style="font-weight: bold; font-size: 14px;">Filtrar Período:</label>
+            <select id="accPeriod" onchange="calculateAccounting()" style="font-weight: bold; padding: 8px 12px;">
+              <option value="week">Semana Actual</option>
+              <option value="month" selected>Mes Actual</option>
+              <option value="quarter">Trimestral (Últimos 3 meses)</option>
+            </select>
+            <button class="btn btn-secondary" onclick="calculateAccounting()">🔄 Recalcular</button>
+          </div>
         </div>
 
+        <!-- RESUMEN DE BALANCES DUALES -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-label">Ventas Semanales (Entregadas)</div>
-            <div class="stat-value" id="weeklySales">$0</div>
-            <div style="font-size: 12px; color: var(--muted);" id="weekRangeLabel">Semana Actual</div>
+            <div class="stat-label">Ventas Reparto (Pedidos)</div>
+            <div class="stat-value" id="statDeliverySales">$0</div>
+            <div style="font-size: 11px; color: var(--muted);" id="statDeliverySub">0 pedidos entregados</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Pedidos Entregados</div>
-            <div class="stat-value" id="deliveredCount">0</div>
-            <div style="font-size: 12px; color: var(--muted);">De esta semana</div>
+            <div class="stat-label">Ventas Tienda Física</div>
+            <div class="stat-value" id="statStoreSales" style="color: #2b78a0;">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Caja del local</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Pedidos Pendientes</div>
-            <div class="stat-value" style="color: #b9770e;" id="pendingCount">0</div>
-            <div style="font-size: 12px; color: var(--muted);">Por entregar</div>
+            <div class="stat-label">Total Ingresos Brutos</div>
+            <div class="stat-value" id="statTotalGross" style="color: var(--success);">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Reparto + Local</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Total Histórico Entregado</div>
-            <div class="stat-value" style="color: #244031;" id="totalSales">$0</div>
-            <div style="font-size: 12px; color: var(--muted);">Acumulado Total</div>
+            <div class="stat-label">Gastos Totales (Sueldos + Fijos)</div>
+            <div class="stat-value" id="statTotalExpenses" style="color: var(--danger);">$0</div>
+            <div style="font-size: 11px; color: var(--muted);">Proporcional al período</div>
+          </div>
+          <div class="stat-card" style="grid-column: 1 / -1; background: #f2f7ef; border: 2px solid var(--leaf);">
+            <div class="stat-label" style="font-size: 15px; color: var(--ink);">Balance Neto Estimado (Ganancia)</div>
+            <div class="stat-value" id="statNetProfit" style="font-size: 34px;">$0</div>
+            <div style="font-size: 12px; color: var(--muted);" id="statPeriodText">Período seleccionado</div>
           </div>
         </div>
 
+        <!-- CONFIGURACIÓN DE EGRESOS (SUELDOS Y GASTOS FIJOS TIENDA) -->
         <div class="card">
-          <h2>Historial de Ventas Entregadas</h2>
+          <h2>👥 Configuración de Personal y Costos Fijos</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="driverDaily">🚚 Chofer ($ Pago por día)</label>
+              <input id="driverDaily" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="driverDays">Días trabajados por semana</label>
+              <input id="driverDays" type="number" value="6" max="7" min="1" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl1Weekly">📦 Chica 1 ($ Pago Semanal)</label>
+              <input id="girl1Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl2Weekly">📦 Chica 2 ($ Pago Semanal)</label>
+              <input id="girl2Weekly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="girl3Monthly">📦 Chica 3 ($ Pago Mensual)</label>
+              <input id="girl3Monthly" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field">
+              <label for="storeRent">🏠 Alquiler Tienda Física ($ Mensual)</label>
+              <input id="storeRent" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+            <div class="field full">
+              <label for="storeElectric">💡 Luz / Servicios Tienda Física ($ Mensual)</label>
+              <input id="storeElectric" type="number" value="0" oninput="saveAndRecalculateAcc()">
+            </div>
+          </div>
+        </div>
+
+        <!-- ANEXO TIENDA FÍSICA -->
+        <div class="card">
+          <h2>🏪 Anexo: Registro Diarios de Ventas en Tienda Física</h2>
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">Ingresá la caja total obtenida día a día en el local para sumar a los totales generales.</p>
+          
+          <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
+            <div class="field">
+              <label for="storeSaleDate">Fecha</label>
+              <input id="storeSaleDate" type="date">
+            </div>
+            <div class="field">
+              <label for="storeSaleAmount">Monto Recaudado ($)</label>
+              <input id="storeSaleAmount" type="number" step="0.01" placeholder="Ej. 45000">
+            </div>
+            <div class="field">
+              <button class="btn btn-success" type="button" onclick="addStoreDailySale()">+ Registrar Día</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Ingreso Local</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="storeSalesTableBody">
+                <tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias registradas para la tienda física.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HISTORIAL COMPLETO DE REPARTO -->
+        <div class="card">
+          <h2>Historial de Pedidos Entregados (Reparto)</h2>
           <div class="table-responsive">
             <table>
               <thead>
@@ -386,14 +496,14 @@
     </main>
   </div>
 
-  <!-- MODAL: RESUMEN DE ARMADO (CONSOLIDADO DE PRODUCTOS) -->
+  <!-- MODAL: RESUMEN DE ARMADO -->
   <div id="summaryModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
         <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
       </div>
-      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección:</p>
+      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección (desglosando los combos automáticamente):</p>
       
       <div class="table-responsive">
         <table>
@@ -401,7 +511,7 @@
             <tr>
               <th>Producto</th>
               <th>Cantidad Total Solicitada</th>
-              <th>Pedidos que lo incluyen</th>
+              <th>Incluido en</th>
             </tr>
           </thead>
           <tbody id="summaryTableBody">
@@ -413,6 +523,64 @@
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;" class="no-print">
         <button class="btn btn-secondary" onclick="closeSummaryModal()">Cerrar</button>
         <button class="btn" onclick="window.print()">🖨️ Imprimir Resumen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAR COMPONENTES DE COMBOS -->
+  <div id="comboModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 650px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 20px;" id="comboModalTitle">⚙️ Configurar Componentes de Combo</h2>
+        <button class="btn btn-secondary btn-sm" onclick="closeComboModal()">✕ Cerrar</button>
+      </div>
+      
+      <input type="hidden" id="configComboId">
+      
+      <div style="background: #f3edd9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13.5px;">
+        Agregá los productos y cantidades que incluye este combo para que el <b>Resumen de Armado</b> y la tienda los muestren correctamente.
+      </div>
+
+      <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto; align-items: flex-end; margin-bottom: 20px;">
+        <div class="field">
+          <label>Producto componente:</label>
+          <select id="comboCompProductSelect"></select>
+        </div>
+        <div class="field">
+          <label>Cantidad:</label>
+          <input id="comboCompQty" type="number" step="0.01" value="1" min="0.01">
+        </div>
+        <div class="field">
+          <label>Unidad:</label>
+          <select id="comboCompUnit">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="unidades">unidades</option>
+          </select>
+        </div>
+        <div class="field">
+          <button class="btn btn-success" type="button" onclick="addComboComponent()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto Componente</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="comboComponentsTableBody">
+            <tr><td colspan="4" style="text-align:center; color: var(--muted);">Seleccioná los componentes del combo.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn" onclick="closeComboModal()">Terminar / Guardar</button>
       </div>
     </div>
   </div>
@@ -451,8 +619,47 @@
     const db = window.supabase.createClient(window.BUENASRAICES_SUPABASE_URL, window.BUENASRAICES_SUPABASE_KEY);
     let allProducts = [];
     let rawOrders = [];
+    let storeDailySales = [];
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
+
+    // --- LÓGICA DE AUTENTICACIÓN ---
+    async function checkAuth() {
+      const { data: { session } } = await db.auth.getSession();
+      
+      if (session) {
+        document.getElementById('loginScreen').style.display = 'none';
+        loadProducts();
+        loadSavedConfig();
+      } else {
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+      
+      errorEl.style.display = 'none';
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errorEl.textContent = 'Credenciales inválidas: ' + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        document.getElementById('loginScreen').style.display = 'none';
+        loadProducts();
+        loadSavedConfig();
+      }
+    }
+
+    async function handleLogout() {
+      await db.auth.signOut();
+      window.location.reload();
+    }
 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -501,7 +708,10 @@
       element.classList.add('active');
 
       if (viewId === 'ordersView') loadOrders();
-      if (viewId === 'accountingView') loadOrders().then(() => calculateAccounting());
+      if (viewId === 'accountingView') {
+        loadSavedConfig();
+        loadOrders().then(() => calculateAccounting());
+      }
     }
 
     function showNotice(msg) {
@@ -525,20 +735,24 @@
         return;
       }
 
-      tbody.innerHTML = allProducts.map(p => `
-        <tr>
-          <td>${p.image_url ? `<img src="${p.image_url}" class="prod-img-preview">` : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`}</td>
-          <td><b>${p.name}</b></td>
-          <td>${p.category || '-'}</td>
-          <td><b>${money(p.price_per_kg)}</b></td>
-          <td>${p.sale_unit || 'kg'}</td>
-          <td>${p.display_order || 1}</td>
-          <td>
-            <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
-            <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = allProducts.map(p => {
+        const isCombo = (p.category || '').toLowerCase() === 'combos';
+        return `
+          <tr>
+            <td>${p.image_url ? `<img src="${p.image_url}" class="prod-img-preview">` : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`}</td>
+            <td><b>${p.name}</b></td>
+            <td>${p.category || '-'}</td>
+            <td><b>${money(p.price_per_kg)}</b></td>
+            <td>${p.sale_unit || 'kg'}</td>
+            <td>${p.display_order || 1}</td>
+            <td>
+              ${isCombo ? `<button class="btn btn-success btn-sm" onclick="openComboModal('${p.id}', '${p.name}')">⚙️ Configurar Combo</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
+              <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -588,6 +802,67 @@
       if (!confirm(`¿Eliminar "${name}"?`)) return;
       await db.from('products').delete().eq('id', id);
       loadProducts();
+    }
+
+    // --- GESTIÓN DE COMPONENTES DE COMBOS ---
+    async function addComboComponent() {
+      const comboId = document.getElementById('configComboId').value;
+      const compProdId = document.getElementById('comboCompProductSelect').value;
+      const qty = parseFloat(document.getElementById('comboCompQty').value);
+      const unit = document.getElementById('comboCompUnit').value;
+
+      if (!compProdId || isNaN(qty) || qty <= 0) {
+        alert('Seleccioná un producto válido y una cantidad mayor a 0.');
+        return;
+      }
+
+      const { error } = await db.from('combo_items').insert({
+        combo_product_id: comboId,
+        component_product_id: compProdId,
+        quantity: qty,
+        unit_type: unit
+      });
+
+      if (error) {
+        showNotice('Error al agregar componente: ' + error.message);
+      } else {
+        showNotice('¡Componente agregado al combo!');
+        document.getElementById('comboCompQty').value = '1';
+        
+        setTimeout(() => {
+          loadComboComponents(comboId);
+        }, 200);
+      }
+    }
+
+    async function loadComboComponents(comboId) {
+      const tbody = document.getElementById('comboComponentsTableBody');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Cargando componentes...</td></tr>';
+
+      const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--danger);">Error al cargar: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Este combo todavía no tiene componentes cargados.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        const compProd = allProducts.find(p => p.id === item.component_product_id);
+        const compName = compProd ? compProd.name : 'Producto';
+        return `
+          <tr>
+            <td><b>${compName}</b></td>
+            <td>${item.quantity}</td>
+            <td>${item.unit_type || 'kg'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕ Eliminar</button></td>
+          </tr>
+        `;
+      }).join('');
     }
 
     // --- CARGAR Y GESTIONAR PEDIDOS ---
@@ -698,10 +973,18 @@
           const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
           
           const units = item.units_quantity || 1;
-          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          
+          // Corrección robusta para tomar el peso o cantidad real pedida
+          let defaultWeight = 1;
+          if (item.weight_quantity !== undefined && item.weight_quantity !== null && item.weight_quantity > 0) {
+            defaultWeight = item.weight_quantity;
+          } else if (item.quantity !== undefined && item.quantity !== null && item.quantity > 0) {
+            defaultWeight = item.quantity;
+          }
+
           const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
           
-          const subtotal = isWeightBased ? (weight * unitPrice) : (units * unitPrice);
+          const subtotal = isWeightBased ? (defaultWeight * unitPrice) : (units * unitPrice);
           totalCalculado += subtotal;
 
           return `
@@ -714,15 +997,15 @@
                       style="width: 55px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <label style="font-size: 11px;">Kg:
-                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${weight}" 
+                  <label style="font-size: 11px;">${saleUnit === 'kg' ? 'Kg' : 'Cant'}:
+                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
                       style="width: 65px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  ${units} un. (${weight} kg)
+                  ${isWeightBased ? `${defaultWeight}${saleUnit}` : `${units} un.`}
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -735,7 +1018,13 @@
         }).join('');
       }
 
-      const customerAddress = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
+      // Extracción limpia y segura de todos los datos del cliente y su dirección
+      const customerName = order.customer_name || order.name || 'Sin nombre';
+      const phone = order.phone || order.telefono || '';
+      const street = order.address || order.shipping_address || order.street || order.direccion || 'Retira en local / Sin dirección';
+      const entrecalles = order.entrecalles || order.cross_streets || order.entre_calles || order.reference || order.referencia || 'No especificado';
+      const localidad = order.zone || order.city || order.localidad || 'Sin Localidad';
+      const zona = order.zone || 'Sin Zona';
 
       return `
         <div class="order-card" id="order-card-${order.id}">
@@ -756,10 +1045,20 @@
           </div>
 
           <div class="order-info">
-            <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
-            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-            <div style="grid-column: 1 / -1; font-size: 15px;"><b>Dirección de Entrega:</b> <span style="text-decoration: underline;">${customerAddress}</span></div>
-            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || order.city || 'Sin Zona'}</span></div>
+            <div><b>Nombre y Apellido:</b> ${customerName}</div>
+            <div><b>Teléfono:</b> ${phone ? `<a href="https://wa.me/${phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${phone}</a>` : 'N/A'}</div>
+            
+            <div style="grid-column: 1 / -1; font-size: 15px;">
+              <b>Dirección:</b> <span style="text-decoration: underline;">${street}</span>
+            </div>
+
+            <div style="grid-column: 1 / -1; font-size: 14px;">
+              <b>Entre calles:</b> ${entrecalles}
+            </div>
+
+            <div><b>Localidad:</b> ${localidad}</div>
+            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${zona}</span></div>
+            
             ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
@@ -790,8 +1089,8 @@
       `;
     }
 
-    // --- RESUMEN DE ARMADO / CONSOLIDADO ---
-    function openSummaryModal(zone) {
+    // --- RESUMEN DE ARMADO / CONSOLIDADO CON DESGLOSE DE COMBOS ---
+    async function openSummaryModal(zone) {
       let filtered = rawOrders;
       const title = document.getElementById('summaryModalTitle');
       
@@ -804,30 +1103,47 @@
 
       const summary = {};
 
-      filtered.forEach(order => {
-        if (!order.order_items) return;
-        order.order_items.forEach(item => {
-          const key = item.product_name.trim();
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === key.toLowerCase());
-          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
+      function addStoSummary(name, totalUnits, totalWeight, unit) {
+        const key = name.trim();
+        if (!summary[key]) {
+          summary[key] = { name: key, totalUnits: 0, totalWeight: 0, unit: unit, ordersCount: 0 };
+        }
+        summary[key].totalUnits += totalUnits;
+        summary[key].totalWeight += totalWeight;
+        summary[key].ordersCount += 1;
+      }
+
+      for (const order of filtered) {
+        if (!order.order_items) continue;
+        
+        for (const item of order.order_items) {
+          const productName = item.product_name.trim();
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
+          
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
 
-          if (!summary[key]) {
-            summary[key] = {
-              name: key,
-              totalUnits: 0,
-              totalWeight: 0,
-              unit: unit,
-              ordersCount: 0
-            };
+          if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
+            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
+            
+            if (comboComponents && comboComponents.length > 0) {
+              comboComponents.forEach(comp => {
+                const compProduct = allProducts.find(p => p.id === comp.component_product_id);
+                if (compProduct) {
+                  const compUnits = Number(comp.quantity) * units;
+                  const compWeight = Number(comp.quantity) * weight;
+                  addStoSummary(compProduct.name, compUnits, compWeight, comp.unit_type || compProduct.sale_unit || 'kg');
+                }
+              });
+            } else {
+              addStoSummary(productName, units, weight, unit);
+            }
+          } else {
+            addStoSummary(productName, units, weight, unit);
           }
-
-          summary[key].totalUnits += units;
-          summary[key].totalWeight += weight;
-          summary[key].ordersCount += 1;
-        });
-      });
+        }
+      }
 
       const tbody = document.getElementById('summaryTableBody');
       const items = Object.values(summary);
@@ -847,7 +1163,7 @@
             <tr>
               <td><b>${i.name}</b></td>
               <td>${qtyText}</td>
-              <td>${i.ordersCount} pedido(s)</td>
+              <td>Pedidos generales</td>
             </tr>
           `;
         }).join('');
@@ -880,24 +1196,124 @@
         const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
         const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
         const units = item.units_quantity || 1;
-        const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+        
+        let weight = 1;
+        if (item.weight_quantity !== undefined && item.weight_quantity !== null && item.weight_quantity > 0) {
+          weight = item.weight_quantity;
+        } else if (item.quantity !== undefined && item.quantity !== null && item.quantity > 0) {
+          weight = item.quantity;
+        }
+
         const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
         return sum + (isWeightBased ? (weight * unitPrice) : (units * unitPrice));
       }, 0);
     }
 
+    // --- CONTABILIDAD Y BALANCES AVANZADOS ---
+    function saveAndRecalculateAcc() {
+      const config = {
+        driverDaily: parseFloat(document.getElementById('driverDaily').value) || 0,
+        driverDays: parseFloat(document.getElementById('driverDays').value) || 0,
+        girl1Weekly: parseFloat(document.getElementById('girl1Weekly').value) || 0,
+        girl2Weekly: parseFloat(document.getElementById('girl2Weekly').value) || 0,
+        girl3Monthly: parseFloat(document.getElementById('girl3Monthly').value) || 0,
+        storeRent: parseFloat(document.getElementById('storeRent').value) || 0,
+        storeElectric: parseFloat(document.getElementById('storeElectric').value) || 0,
+      };
+      localStorage.setItem('buenasraices_acc_config', JSON.stringify(config));
+      calculateAccounting();
+    }
+
+    function loadSavedConfig() {
+      const saved = localStorage.getItem('buenasraices_acc_config');
+      if (saved) {
+        const c = JSON.parse(saved);
+        document.getElementById('driverDaily').value = c.driverDaily || 0;
+        document.getElementById('driverDays').value = c.driverDays || 6;
+        document.getElementById('girl1Weekly').value = c.girl1Weekly || 0;
+        document.getElementById('girl2Weekly').value = c.girl2Weekly || 0;
+        document.getElementById('girl3Monthly').value = c.girl3Monthly || 0;
+        document.getElementById('storeRent').value = c.storeRent || 0;
+        document.getElementById('storeElectric').value = c.storeElectric || 0;
+      }
+      
+      const savedSales = localStorage.getItem('buenasraices_store_sales');
+      if (savedSales) {
+        storeDailySales = JSON.parse(savedSales);
+      }
+      renderStoreSalesTable();
+    }
+
+    function addStoreDailySale() {
+      const dateVal = document.getElementById('storeSaleDate').value;
+      const amountVal = parseFloat(document.getElementById('storeSaleAmount').value);
+
+      if (!dateVal || isNaN(amountVal) || amountVal <= 0) {
+        alert('Por favor ingrese una fecha y un monto válido.');
+        return;
+      }
+
+      storeDailySales.push({ id: Date.now(), date: dateVal, amount: amountVal });
+      localStorage.setItem('buenasraices_store_sales', JSON.stringify(storeDailySales));
+      
+      document.getElementById('storeSaleAmount').value = '';
+      renderStoreSalesTable();
+      calculateAccounting();
+      showNotice('Venta diaria registrada con éxito');
+    }
+
+    function deleteStoreSale(id) {
+      storeDailySales = storeDailySales.filter(item => item.id !== id);
+      localStorage.setItem('buenasraices_store_sales', JSON.stringify(storeDailySales));
+      renderStoreSalesTable();
+      calculateAccounting();
+    }
+
+    function renderStoreSalesTable() {
+      const tbody = document.getElementById('storeSalesTableBody');
+      if (!tbody) return;
+      if (!storeDailySales.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias registradas para la tienda física.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = storeDailySales.sort((a,b) => new Date(b.date) - new Date(a.date)).map(s => `
+        <tr>
+          <td><b>${new Date(s.date + 'T00:00:00').toLocaleDateString('es-AR')}</b></td>
+          <td><b style="color: var(--leaf);">${money(s.amount)}</b></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteStoreSale(${s.id})">✕ Eliminar</button></td>
+        </tr>
+      `).join('');
+    }
+
     function calculateAccounting() {
+      const period = document.getElementById('accPeriod').value;
       const now = new Date();
-      const day = now.getDay();
-      const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
-      const startOfWeek = new Date(now.setDate(diffToMonday));
-      startOfWeek.setHours(0, 0, 0, 0);
 
-      let weeklySales = 0;
+      let startDate = new Date();
+      let weeksFactor = 1;
+
+      if (period === 'week') {
+        const day = now.getDay();
+        const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+        startDate = new Date(now.setDate(diffToMonday));
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 1;
+        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente a la Semana Actual';
+      } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 4.33;
+        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente al Mes Actual (4.33 semanas)';
+      } else if (period === 'quarter') {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        startDate.setHours(0, 0, 0, 0);
+        weeksFactor = 13;
+        document.getElementById('statPeriodText').textContent = 'Cálculo acumulado del Trimestre (13 semanas)';
+      }
+
+      let deliverySales = 0;
       let deliveredCount = 0;
-      let pendingCount = 0;
-      let totalSales = 0;
-
       const deliveredOrders = [];
 
       rawOrders.forEach(order => {
@@ -906,26 +1322,51 @@
         const orderDate = new Date(order.created_at || Date.now());
 
         if (isDelivered) {
-          totalSales += orderTotal;
-          deliveredOrders.push({ ...order, computedTotal: orderTotal });
-
-          if (orderDate >= startOfWeek) {
-            weeklySales += orderTotal;
+          if (orderDate >= startDate) {
+            deliverySales += orderTotal;
             deliveredCount++;
+            deliveredOrders.push({ ...order, computedTotal: orderTotal });
           }
-        } else {
-          pendingCount++;
         }
       });
 
-      document.getElementById('weeklySales').textContent = money(weeklySales);
-      document.getElementById('deliveredCount').textContent = deliveredCount;
-      document.getElementById('pendingCount').textContent = pendingCount;
-      document.getElementById('totalSales').textContent = money(totalSales);
+      let storeSalesTotal = 0;
+      storeDailySales.forEach(s => {
+        const sDate = new Date(s.date + 'T00:00:00');
+        if (sDate >= startDate) {
+          storeSalesTotal += s.amount;
+        }
+      });
+
+      const driverDaily = parseFloat(document.getElementById('driverDaily').value) || 0;
+      const driverDays = parseFloat(document.getElementById('driverDays').value) || 0;
+      const girl1 = parseFloat(document.getElementById('girl1Weekly').value) || 0;
+      const girl2 = parseFloat(document.getElementById('girl2Weekly').value) || 0;
+      const girl3Monthly = parseFloat(document.getElementById('girl3Monthly').value) || 0;
+      
+      const rent = parseFloat(document.getElementById('storeRent').value) || 0;
+      const electric = parseFloat(document.getElementById('storeElectric').value) || 0;
+
+      const weeklyPayroll = (driverDaily * driverDays) + girl1 + girl2 + (girl3Monthly / 4.33);
+      const weeklyFixedCosts = (rent + electric) / 4.33;
+
+      const totalExpenses = (weeklyPayroll + weeklyFixedCosts) * weeksFactor;
+      const grossIncome = deliverySales + storeSalesTotal;
+      const netProfit = grossIncome - totalExpenses;
+
+      document.getElementById('statDeliverySales').textContent = money(deliverySales);
+      document.getElementById('statDeliverySub').textContent = `${deliveredCount} pedidos entregados`;
+      document.getElementById('statStoreSales').textContent = money(storeSalesTotal);
+      document.getElementById('statTotalGross').textContent = money(grossIncome);
+      document.getElementById('statTotalExpenses').textContent = money(totalExpenses);
+
+      const netElem = document.getElementById('statNetProfit');
+      netElem.textContent = money(netProfit);
+      netElem.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
       const tbody = document.getElementById('accountingTableBody');
       if (!deliveredOrders.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados aún.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados en este período.</td></tr>';
         return;
       }
 
@@ -980,7 +1421,6 @@
       loadOrders();
     }
 
-    // Modal
     function openAddItemModal(orderId) {
       document.getElementById('modalOrderId').value = orderId;
       const select = document.getElementById('modalProductSelect');
@@ -1051,8 +1491,7 @@
       }, 300);
     }
 
-    // Inicialización
-    loadProducts();
+    checkAuth();
   </script>
 </body>
 </html>
