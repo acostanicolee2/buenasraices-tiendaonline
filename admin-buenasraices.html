@@ -805,47 +805,7 @@
     }
 
     // --- GESTIÓN DE COMPONENTES DE COMBOS ---
-    async function openComboModal(comboId, comboName) {
-      document.getElementById('configComboId').value = comboId;
-      document.getElementById('comboModalTitle').textContent = `⚙️ Configurar Combo: ${comboName}`;
-      
-      const select = document.getElementById('comboCompProductSelect');
-      select.innerHTML = allProducts
-        .filter(p => p.id !== comboId && (p.category || '').toLowerCase() !== 'combos')
-        .map(p => `<option value="${p.id}">${p.name} (${p.sale_unit || 'kg'})</option>`).join('');
-
-      await loadComboComponents(comboId);
-      document.getElementById('comboModal').style.display = 'flex';
-    }
-
-    function closeComboModal() {
-      document.getElementById('comboModal').style.display = 'none';
-    }
-
-    async function loadComboComponents(comboId) {
-      const tbody = document.getElementById('comboComponentsTableBody');
-      const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
-
-      if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Este combo todavía no tiene componentes cargados.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.map(item => {
-        const compProd = allProducts.find(p => p.id === item.component_product_id);
-        const compName = compProd ? compProd.name : 'Producto';
-        return `
-          <tr>
-            <td><b>${compName}</b></td>
-            <td>${item.quantity}</td>
-            <td>${item.unit_type || 'kg'}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕ Eliminar</button></td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function addComboComponent() {
+async function addComboComponent() {
       const comboId = document.getElementById('configComboId').value;
       const compProdId = document.getElementById('comboCompProductSelect').value;
       const qty = parseFloat(document.getElementById('comboCompQty').value);
@@ -868,16 +828,43 @@
       } else {
         showNotice('¡Componente agregado al combo!');
         document.getElementById('comboCompQty').value = '1';
-        loadComboComponents(comboId);
+        
+        // Damos un pequeño respiro de 200ms para asegurar que Supabase indexe el registro antes de volver a leerlo
+        setTimeout(() => {
+          loadComboComponents(comboId);
+        }, 200);
       }
     }
 
-    async function deleteComboComponent(itemId, comboId) {
-      await db.from('combo_items').delete().eq('id', itemId);
-      showNotice('Componente eliminado');
-      loadComboComponents(comboId);
-    }
+    async function loadComboComponents(comboId) {
+      const tbody = document.getElementById('comboComponentsTableBody');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Cargando componentes...</td></tr>';
 
+      const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--danger);">Error al cargar: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Este combo todavía no tiene componentes cargados.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        const compProd = allProducts.find(p => p.id === item.component_product_id);
+        const compName = compProd ? compProd.name : 'Producto';
+        return `
+          <tr>
+            <td><b>${compName}</b></td>
+            <td>${item.quantity}</td>
+            <td>${item.unit_type || 'kg'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕ Eliminar</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
     // --- CARGAR Y GESTIONAR PEDIDOS ---
     async function loadOrders() {
       const container = document.getElementById('ordersContainer');
