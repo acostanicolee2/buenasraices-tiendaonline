@@ -974,7 +974,6 @@
           
           const units = item.units_quantity || 1;
           
-          // Corrección robusta para tomar el peso o cantidad real pedida
           let defaultWeight = 1;
           if (item.weight_quantity !== undefined && item.weight_quantity !== null && item.weight_quantity > 0) {
             defaultWeight = item.weight_quantity;
@@ -992,12 +991,12 @@
               <td><b>${item.product_name}</b></td>
               <td>
                 <div class="no-print" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <label style="font-size: 11px;">Pedido (Cant):
+                  <label style="font-size: 11px;">Cant/Unid:
                     <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
                       style="width: 55px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
                   </label>
-                  <label style="font-size: 11px;">Real (${saleUnit === 'kg' ? 'Kg' : 'Cant'}):
+                  <label style="font-size: 11px;">Kg/Gramo:
                     <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
                       style="width: 65px; padding: 3px;"
                       onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
@@ -1005,7 +1004,7 @@
                   <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
                 </div>
                 <span class="print-only">
-                  Pedido: ${units} un. | Real: ${defaultWeight} ${saleUnit}
+                  ${units} un. / ${defaultWeight} ${saleUnit}
                 </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
@@ -1018,7 +1017,6 @@
         }).join('');
       }
 
-      // Extracción limpia y segura de todos los datos del cliente y su dirección
       const customerName = order.customer_name || order.name || 'Sin nombre';
       const phone = order.phone || order.telefono || '';
       const street = order.address || order.shipping_address || order.street || order.direccion || 'Retira en local / Sin dirección';
@@ -1067,8 +1065,8 @@
             <thead>
               <tr>
                 <th>Producto</th>
-                <th>Cant. Pedida / Peso o Cant. Real</th>
-                <th class="price-col">Precio Unit. / Kg</th>
+                <th>Cantidad / Editar</th>
+                <th class="price-col">Precio Unit. / kg</th>
                 <th class="price-col">Subtotal</th>
                 <th class="no-print" style="width: 40px;"></th>
               </tr>
@@ -1089,7 +1087,6 @@
       `;
     }
 
-    // --- RESUMEN DE ARMADO / CONSOLIDADO CON DESGLOSE DE COMBOS ---
     async function openSummaryModal(zone) {
       let filtered = rawOrders;
       const title = document.getElementById('summaryModalTitle');
@@ -1209,7 +1206,6 @@
       }, 0);
     }
 
-    // --- CONTABILIDAD Y BALANCES AVANZADOS ---
     function saveAndRecalculateAcc() {
       const config = {
         driverDaily: parseFloat(document.getElementById('driverDaily').value) || 0,
