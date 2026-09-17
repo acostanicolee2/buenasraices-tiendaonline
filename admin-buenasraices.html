@@ -210,7 +210,7 @@
           <span class="icon">🚪</span> Cerrar Sesión
         </a>
       </nav>
-      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.2</div>
+      <div style="font-size: 12px; color: #a3b899; text-align: center;">Buenas Raíces v3.3</div>
     </aside>
 
     <!-- CONTENIDO PRINCIPAL -->
@@ -234,7 +234,7 @@
             <div class="form-grid">
               <div class="field">
                 <label for="name">Nombre del Producto</label>
-                <input id="name" required placeholder="Ej. Orégano, Tomate, Pollo Entero">
+                <input id="name" required placeholder="Ej. Orégano, Tomate, Combo Verde">
               </div>
               <div class="field">
                 <label for="category">Categoría</label>
@@ -503,7 +503,7 @@
         <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
         <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
       </div>
-      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección:</p>
+      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección (desglosando los combos automáticamente):</p>
       
       <div class="table-responsive">
         <table>
@@ -511,7 +511,7 @@
             <tr>
               <th>Producto</th>
               <th>Cantidad Total Solicitada</th>
-              <th>Pedidos que lo incluyen</th>
+              <th>Incluido en</th>
             </tr>
           </thead>
           <tbody id="summaryTableBody">
@@ -523,6 +523,64 @@
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;" class="no-print">
         <button class="btn btn-secondary" onclick="closeSummaryModal()">Cerrar</button>
         <button class="btn" onclick="window.print()">🖨️ Imprimir Resumen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAR COMPONENTES DE COMBOS -->
+  <div id="comboModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 650px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 20px;" id="comboModalTitle">⚙️ Configurar Componentes de Combo</h2>
+        <button class="btn btn-secondary btn-sm" onclick="closeComboModal()">✕ Cerrar</button>
+      </div>
+      
+      <input type="hidden" id="configComboId">
+      
+      <div style="background: #f3edd9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13.5px;">
+        Agregá los productos y cantidades que incluye este combo para que el <b>Resumen de Armado</b> los desglose automáticamente.
+      </div>
+
+      <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto; align-items: flex-end; margin-bottom: 20px;">
+        <div class="field">
+          <label>Producto componente:</label>
+          <select id="comboCompProductSelect"></select>
+        </div>
+        <div class="field">
+          <label>Cantidad:</label>
+          <input id="comboCompQty" type="number" step="0.01" value="1" min="0.01">
+        </div>
+        <div class="field">
+          <label>Unidad:</label>
+          <select id="comboCompUnit">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="unidades">unidades</option>
+          </select>
+        </div>
+        <div class="field">
+          <button class="btn btn-success" type="button" onclick="addComboComponent()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto Componente</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="comboComponentsTableBody">
+            <tr><td colspan="4" style="text-align:center; color: var(--muted);">Seleccioná los componentes del combo.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn" onclick="closeComboModal()">Terminar / Guardar</button>
       </div>
     </div>
   </div>
@@ -677,20 +735,24 @@
         return;
       }
 
-      tbody.innerHTML = allProducts.map(p => `
-        <tr>
-          <td>${p.image_url ? `<img src="${p.image_url}" class="prod-img-preview">` : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`}</td>
-          <td><b>${p.name}</b></td>
-          <td>${p.category || '-'}</td>
-          <td><b>${money(p.price_per_kg)}</b></td>
-          <td>${p.sale_unit || 'kg'}</td>
-          <td>${p.display_order || 1}</td>
-          <td>
-            <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
-            <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = allProducts.map(p => {
+        const isCombo = (p.category || '').toLowerCase() === 'combos';
+        return `
+          <tr>
+            <td>${p.image_url ? `<img src="${p.image_url}" class="prod-img-preview">` : `<div class="prod-img-preview">${p.icon || '🌱'}</div>`}</td>
+            <td><b>${p.name}</b></td>
+            <td>${p.category || '-'}</td>
+            <td><b>${money(p.price_per_kg)}</b></td>
+            <td>${p.sale_unit || 'kg'}</td>
+            <td>${p.display_order || 1}</td>
+            <td>
+              ${isCombo ? `<button class="btn btn-success btn-sm" onclick="openComboModal('${p.id}', '${p.name}')">⚙️ Configurar Combo</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
+              <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -740,6 +802,80 @@
       if (!confirm(`¿Eliminar "${name}"?`)) return;
       await db.from('products').delete().eq('id', id);
       loadProducts();
+    }
+
+    // --- GESTIÓN DE COMPONENTES DE COMBOS ---
+    async function openComboModal(comboId, comboName) {
+      document.getElementById('configComboId').value = comboId;
+      document.getElementById('comboModalTitle').textContent = `⚙️ Configurar Combo: ${comboName}`;
+      
+      const select = document.getElementById('comboCompProductSelect');
+      select.innerHTML = allProducts
+        .filter(p => p.id !== comboId && (p.category || '').toLowerCase() !== 'combos')
+        .map(p => `<option value="${p.id}">${p.name} (${p.sale_unit || 'kg'})</option>`).join('');
+
+      await loadComboComponents(comboId);
+      document.getElementById('comboModal').style.display = 'flex';
+    }
+
+    function closeComboModal() {
+      document.getElementById('comboModal').style.display = 'none';
+    }
+
+    async function loadComboComponents(comboId) {
+      const tbody = document.getElementById('comboComponentsTableBody');
+      const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Este combo todavía no tiene componentes cargados.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        const compProd = allProducts.find(p => p.id === item.component_product_id);
+        const compName = compProd ? compProd.name : 'Producto desconocido';
+        return `
+          <tr>
+            <td><b>${compName}</b></td>
+            <td>${item.quantity}</td>
+            <td>${item.unit_type || 'kg'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕ Eliminar</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function addComboComponent() {
+      const comboId = document.getElementById('configComboId').value;
+      const compProdId = document.getElementById('comboCompProductSelect').value;
+      const qty = parseFloat(document.getElementById('comboCompQty').value);
+      const unit = document.getElementById('comboCompUnit').value;
+
+      if (!compProdId || isNaN(qty) || qty <= 0) {
+        alert('Seleccioná un producto válido y una cantidad mayor a 0.');
+        return;
+      }
+
+      const { error } = await db.from('combo_items').insert({
+        combo_product_id: comboId,
+        component_product_id: compProdId,
+        quantity: qty,
+        unit_type: unit
+      });
+
+      if (error) {
+        showNotice('Error al agregar componente: ' + error.message);
+      } else {
+        showNotice('¡Componente agregado al combo!');
+        document.getElementById('comboCompQty').value = '1';
+        loadComboComponents(comboId);
+      }
+    }
+
+    async function deleteComboComponent(itemId, comboId) {
+      await db.from('combo_items').delete().eq('id', itemId);
+      showNotice('Componente eliminado');
+      loadComboComponents(comboId);
     }
 
     // --- CARGAR Y GESTIONAR PEDIDOS ---
@@ -942,8 +1078,8 @@
       `;
     }
 
-    // --- RESUMEN DE ARMADO / CONSOLIDADO ---
-    function openSummaryModal(zone) {
+    // --- RESUMEN DE ARMADO / CONSOLIDADO CON DESGLOSE DE COMBOS ---
+    async function openSummaryModal(zone) {
       let filtered = rawOrders;
       const title = document.getElementById('summaryModalTitle');
       
@@ -956,30 +1092,48 @@
 
       const summary = {};
 
-      filtered.forEach(order => {
-        if (!order.order_items) return;
-        order.order_items.forEach(item => {
-          const key = item.product_name.trim();
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === key.toLowerCase());
-          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
+      function addStoSummary(name, totalUnits, totalWeight, unit) {
+        const key = name.trim();
+        if (!summary[key]) {
+          summary[key] = { name: key, totalUnits: 0, totalWeight: 0, unit: unit, ordersCount: 0 };
+        }
+        summary[key].totalUnits += totalUnits;
+        summary[key].totalWeight += totalWeight;
+        summary[key].ordersCount += 1;
+      }
+
+      for (const order of filtered) {
+        if (!order.order_items) continue;
+        
+        for (const item of order.order_items) {
+          const productName = item.product_name.trim();
+          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
+          
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
+          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
 
-          if (!summary[key]) {
-            summary[key] = {
-              name: key,
-              totalUnits: 0,
-              totalWeight: 0,
-              unit: unit,
-              ordersCount: 0
-            };
+          // Si es un combo y tiene componentes configurados, los desglosamos
+          if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
+            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
+            
+            if (comboComponents && comboComponents.length > 0) {
+              comboComponents.forEach(comp => {
+                const compProduct = allProducts.find(p => p.id === comp.component_product_id);
+                if (compProduct) {
+                  const compUnits = Number(comp.quantity) * units;
+                  const compWeight = Number(comp.quantity) * weight;
+                  addStoSummary(compProduct.name, compUnits, compWeight, comp.unit_type || compProduct.sale_unit || 'kg');
+                }
+              });
+            } else {
+              addStoSummary(productName, units, weight, unit);
+            }
+          } else {
+            addStoSummary(productName, units, weight, unit);
           }
-
-          summary[key].totalUnits += units;
-          summary[key].totalWeight += weight;
-          summary[key].ordersCount += 1;
-        });
-      });
+        }
+      }
 
       const tbody = document.getElementById('summaryTableBody');
       const items = Object.values(summary);
@@ -999,7 +1153,7 @@
             <tr>
               <td><b>${i.name}</b></td>
               <td>${qtyText}</td>
-              <td>${i.ordersCount} pedido(s)</td>
+              <td>Pedidos generales</td>
             </tr>
           `;
         }).join('');
