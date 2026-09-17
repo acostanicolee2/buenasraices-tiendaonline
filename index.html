@@ -145,6 +145,17 @@
       opacity: 0.9;
     }
 
+    .combo-details-box {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      color: #f8f2e4;
+      margin: 4px 0;
+      line-height: 1.35;
+    }
+
     /* Controles de cantidad */
     .product-controls { 
       display: flex; 
@@ -437,6 +448,7 @@
     let products = [];
     let cartState = {}; // Almacena { productId: { quantity: Number, unitType: String } }
     let selectedCategory = 'Todas';
+    let comboComponentsCache = {}; // Caché para componentes de combos
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
     const grams = (qty, unit) => unit === 'kg' ? Number(qty) * 1000 : Number(qty);
@@ -507,6 +519,7 @@
       container.innerHTML = listToRender.map(p => {
         let unit = p.sale_unit || 'kg';
         let isUnitByWeight = (unit === 'unidad_peso');
+        let isCombo = (p.category || '').toLowerCase() === 'combos';
 
         // Recuperar valor previo si existe en cartState
         let saved = cartState[p.id] || { quantity: '', unitType: 'kg' };
@@ -522,6 +535,17 @@
         let weightNote = isUnitByWeight 
           ? `<div class="product-note">*Aprox 2.5kg. Se pesa al preparar.</div>`
           : '';
+
+        let comboDetailsHtml = '';
+        if (isCombo) {
+          const comps = comboComponentsCache[p.id];
+          if (comps && comps.length > 0) {
+            const listStr = comps.map(c => `${c.quantity} ${c.unit_type || ''} de ${c.name}`).join(' • ');
+            comboDetailsHtml = `<div class="combo-details-box"><b>Contiene:</b> ${listStr}</div>`;
+          } else {
+            comboDetailsHtml = `<div class="combo-details-box"><b>Contiene:</b> Selección especial de estación.</div>`;
+          }
+        }
 
         let priceText = isUnitByWeight 
           ? `${money(p.price)} / kg` 
@@ -539,6 +563,7 @@
             <h3>${p.name}</h3>
             <div class="price">${priceText}</div>
             ${weightNote}
+            ${comboDetailsHtml}
             ${p.category ? `<div class="product-category-tag">${p.category}</div>` : ''}
             
             <div class="product-controls">
@@ -632,6 +657,23 @@
         return;
       }
       products = data.map(p => ({ ...p, price: Number(p.price_per_kg) }));
+
+      // Cargar componentes de los combos para mostrarlos en las tarjetas de la tienda
+      const comboProducts = products.filter(p => (p.category || '').toLowerCase() === 'combos');
+      for (const combo of comboProducts) {
+        const { data: compData } = await db.from('combo_items').select('*').eq('combo_product_id', combo.id);
+        if (compData && compData.length > 0) {
+          comboComponentsCache[combo.id] = compData.map(item => {
+            const compProd = products.find(p => p.id === item.component_product_id);
+            return {
+              name: compProd ? compProd.name : 'Producto',
+              quantity: item.quantity,
+              unit_type: item.unit_type
+            };
+          });
+        }
+      }
+
       renderCategoryButtons();
       renderProducts();
       renderCart();
