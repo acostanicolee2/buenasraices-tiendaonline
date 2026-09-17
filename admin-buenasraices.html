@@ -805,6 +805,23 @@
     }
 
     // --- GESTIÓN DE COMPONENTES DE COMBOS ---
+    async function openComboModal(comboId, comboName) {
+      document.getElementById('configComboId').value = comboId;
+      document.getElementById('comboModalTitle').textContent = `⚙️ Configurar Combo: ${comboName}`;
+      
+      const select = document.getElementById('comboCompProductSelect');
+      select.innerHTML = allProducts
+        .filter(p => (p.category || '').toLowerCase() !== 'combos')
+        .map(p => `<option value="${p.id}">${p.name} (${p.sale_unit || 'kg'})</option>`).join('');
+
+      document.getElementById('comboModal').style.display = 'flex';
+      loadComboComponents(comboId);
+    }
+
+    function closeComboModal() {
+      document.getElementById('comboModal').style.display = 'none';
+    }
+
     async function addComboComponent() {
       const comboId = document.getElementById('configComboId').value;
       const compProdId = document.getElementById('comboCompProductSelect').value;
@@ -828,10 +845,7 @@
       } else {
         showNotice('¡Componente agregado al combo!');
         document.getElementById('comboCompQty').value = '1';
-        
-        setTimeout(() => {
-          loadComboComponents(comboId);
-        }, 200);
+        setTimeout(() => loadComboComponents(comboId), 200);
       }
     }
 
@@ -863,6 +877,11 @@
           </tr>
         `;
       }).join('');
+    }
+
+    async function deleteComboComponent(itemId, comboId) {
+      await db.from('combo_items').delete().eq('id', itemId);
+      loadComboComponents(comboId);
     }
 
     // --- CARGAR Y GESTIONAR PEDIDOS ---
@@ -1020,8 +1039,10 @@
       const customerName = order.customer_name || order.name || 'Sin nombre';
       const phone = order.phone || order.telefono || '';
       const street = order.address || order.shipping_address || order.street || order.direccion || 'Retira en local / Sin dirección';
-      const entrecalles = order.entrecalles || order.cross_streets || order.entre_calles || order.reference || order.referencia || 'No especificado';
-      const localidad = order.zone || order.city || order.localidad || 'Sin Localidad';
+      
+      // Mapeo corregido para entre calles y localidad independiente
+      const entrecalles = order.entre_calles || order.entrecalles || order.cross_streets || order.reference || order.referencia || 'No especificado';
+      const localidad = order.city || order.localidad || 'Sin Localidad';
       const zona = order.zone || 'Sin Zona';
 
       return `
