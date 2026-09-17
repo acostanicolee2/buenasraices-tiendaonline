@@ -805,7 +805,7 @@
     }
 
     // --- GESTIÓN DE COMPONENTES DE COMBOS ---
-async function addComboComponent() {
+    async function addComboComponent() {
       const comboId = document.getElementById('configComboId').value;
       const compProdId = document.getElementById('comboCompProductSelect').value;
       const qty = parseFloat(document.getElementById('comboCompQty').value);
@@ -829,7 +829,6 @@ async function addComboComponent() {
         showNotice('¡Componente agregado al combo!');
         document.getElementById('comboCompQty').value = '1';
         
-        // Damos un pequeño respiro de 200ms para asegurar que Supabase indexe el registro antes de volver a leerlo
         setTimeout(() => {
           loadComboComponents(comboId);
         }, 200);
@@ -865,6 +864,7 @@ async function addComboComponent() {
         `;
       }).join('');
     }
+
     // --- CARGAR Y GESTIONAR PEDIDOS ---
     async function loadOrders() {
       const container = document.getElementById('ordersContainer');
@@ -1011,37 +1011,40 @@ async function addComboComponent() {
       }
 
       const street = order.address || order.shipping_address || order.street || 'Retira en local / Sin dirección';
-    const entrecalles = order.entrecalles || order.cross_streets || order.entre_calles || '';
-    const localidad = order.zone || order.city || order.localidad || 'Sin Localidad';
+      const entrecalles = order.entrecalles || order.cross_streets || order.entre_calles || order.reference || '';
+      const localidad = order.zone || order.city || order.localidad || 'Sin Localidad';
 
-    return `
-      <div class="order-card" id="order-card-${order.id}">
-        <div class="order-header no-print">
-          <div>
-            <span class="order-title">Pedido #${order.id}</span>
-            <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
-            <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
-              ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
-            </span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
-              ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
-          </div>
-        </div>
-
-        <div class="order-info">
-          <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
-          <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
-          
-          <div style="grid-column: 1 / -1; font-size: 15px;">
-            <b>Dirección:</b> <span style="text-decoration: underline;">${street}</span>${entrecalles ? `<br><b>Entrecalles:</b> ${entrecalles}` : ''}
+      return `
+        <div class="order-card" id="order-card-${order.id}">
+          <div class="order-header no-print">
+            <div>
+              <span class="order-title">Pedido #${order.id}</span>
+              <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
+              <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
+                ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
+              </span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
+                ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
+            </div>
           </div>
 
-          <div><b>Localidad / Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${localidad}</span></div>${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
-        </div>
+          <div class="order-info">
+            <div><b>Nombre y Apellido:</b> ${order.customer_name || 'Sin nombre'}</div>
+            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+            
+            <div style="grid-column: 1 / -1; font-size: 15px;">
+              <b>Dirección:</b> <span style="text-decoration: underline;">${street}</span>
+              ${entrecalles ? `<br><b>Entrecalles:</b> ${entrecalles}` : ''}
+            </div>
+
+            <div><b>Localidad / Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${localidad}</span></div>
+            
+            ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
+          </div>
 
           <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
           <table class="order-items-table">
@@ -1105,7 +1108,6 @@ async function addComboComponent() {
           const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
           const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
 
-          // Si es un combo y tiene componentes configurados, los desglosamos
           if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
             const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
             
@@ -1287,7 +1289,6 @@ async function addComboComponent() {
         document.getElementById('statPeriodText').textContent = 'Cálculo acumulado del Trimestre (13 semanas)';
       }
 
-      // 1. Ingresos Reparto
       let deliverySales = 0;
       let deliveredCount = 0;
       const deliveredOrders = [];
@@ -1306,7 +1307,6 @@ async function addComboComponent() {
         }
       });
 
-      // 2. Ingresos Tienda Física
       let storeSalesTotal = 0;
       storeDailySales.forEach(s => {
         const sDate = new Date(s.date + 'T00:00:00');
@@ -1315,7 +1315,6 @@ async function addComboComponent() {
         }
       });
 
-      // 3. Egresos
       const driverDaily = parseFloat(document.getElementById('driverDaily').value) || 0;
       const driverDays = parseFloat(document.getElementById('driverDays').value) || 0;
       const girl1 = parseFloat(document.getElementById('girl1Weekly').value) || 0;
@@ -1332,7 +1331,6 @@ async function addComboComponent() {
       const grossIncome = deliverySales + storeSalesTotal;
       const netProfit = grossIncome - totalExpenses;
 
-      // Actualizar DOM
       document.getElementById('statDeliverySales').textContent = money(deliverySales);
       document.getElementById('statDeliverySub').textContent = `${deliveredCount} pedidos entregados`;
       document.getElementById('statStoreSales').textContent = money(storeSalesTotal);
@@ -1343,7 +1341,6 @@ async function addComboComponent() {
       netElem.textContent = money(netProfit);
       netElem.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
-      // Tabla Historial
       const tbody = document.getElementById('accountingTableBody');
       if (!deliveredOrders.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados en este período.</td></tr>';
@@ -1401,7 +1398,6 @@ async function addComboComponent() {
       loadOrders();
     }
 
-    // Modal
     function openAddItemModal(orderId) {
       document.getElementById('modalOrderId').value = orderId;
       const select = document.getElementById('modalProductSelect');
@@ -1472,7 +1468,6 @@ async function addComboComponent() {
       }, 300);
     }
 
-    // Inicialización y verificación de usuario
     checkAuth();
   </script>
 </body>
