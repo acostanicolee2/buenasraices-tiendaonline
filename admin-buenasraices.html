@@ -1458,25 +1458,29 @@
       }
     }
 
-    async function saveNewOrderItem() {
+ async function saveNewOrderItem() {
       const orderId = document.getElementById('modalOrderId').value;
       const prodId = document.getElementById('modalProductSelect').value;
       const prod = allProducts.find(p => p.id === prodId);
       if (!prod) return;
 
       const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || prod.price_per_kg;
-      const units = parseFloat(document.getElementById('modalUnits').value) || 1;
+      const units = parseInt(document.getElementById('modalUnits').value, 10) || 1;
       const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
+
+      const isWeightBased = prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso' || prod.sale_unit === '1g';
+      const quantity = isWeightBased ? weight : units;
 
       const payload = {
         order_id: orderId,
+        product_id: prod.id, // <-- ¡Agregado! Envía el ID del producto a Supabase
         product_name: prod.name,
         category: prod.category,
         unit_price: unitPrice,
         sale_unit: prod.sale_unit || 'kg',
         units_quantity: units,
         weight_quantity: weight,
-        quantity: (prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso' || prod.sale_unit === '1g') ? weight : units
+        quantity: parseFloat(quantity)
       };
 
       const { error } = await db.from('order_items').insert(payload);
