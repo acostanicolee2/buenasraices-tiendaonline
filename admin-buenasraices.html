@@ -636,6 +636,7 @@
       }
       return `${w}`;
     };
+    
     // --- LÓGICA DE AUTENTICACIÓN ---
     async function checkAuth() {
       const { data: { session } } = await db.auth.getSession();
@@ -1022,22 +1023,24 @@
             <tr>
               <td><b>${item.product_name}</b></td>
               <td>
-                <div class="no-print" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <label style="font-size: 11px;">Cant/Unid:
-                    <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
-                      style="width: 55px; padding: 3px;"
-                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
-                  </label>
-                  <label style="font-size: 11px;">Kg/Gramo:
-                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
-                      style="width: 65px; padding: 3px;"
-                      onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
-                  </label>
-                  <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓ Guardar</button>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span style="font-weight: bold; color: var(--leaf); min-width: 70px;">
+                    ${formatProductWeight(defaultWeight, saleUnit)}
+                  </span>
+                  <div class="no-print" style="display: flex; gap: 4px; align-items: center;">
+                    <label style="font-size: 10px; color: var(--muted);">Cant:
+                      <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
+                        style="width: 45px; padding: 2px; font-size: 12px;"
+                        onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                    </label>
+                    <label style="font-size: 10px; color: var(--muted);">Peso/Kg:
+                      <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
+                        style="width: 55px; padding: 2px; font-size: 12px;"
+                        onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                    </label>
+                    <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓</button>
+                  </div>
                 </div>
-                <span class="print-only">
-                  ${units} un. / ${defaultWeight} ${saleUnit}
-                </span>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
               <td class="price-col"><b style="color: var(--leaf);">${money(subtotal)}</b></td>
