@@ -877,7 +877,10 @@
       const tbody = document.getElementById('comboComponentsTableBody');
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Cargando componentes...</td></tr>';
 
+      console.log("Buscando componentes para el combo ID:",comboId);
+
       const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
+      console.log(("Respuesta de Supabase (combo_items):", data, error);
 
       if (error) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--danger);">Error al cargar: ${error.message}</td></tr>`;
