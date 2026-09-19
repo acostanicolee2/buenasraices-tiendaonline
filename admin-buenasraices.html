@@ -1458,7 +1458,7 @@
       }
     }
 
- async function saveNewOrderItem() {
+async function saveNewOrderItem() {
       const orderId = document.getElementById('modalOrderId').value;
       const prodId = document.getElementById('modalProductSelect').value;
       const prod = allProducts.find(p => p.id === prodId);
@@ -1473,10 +1473,11 @@
 
       const payload = {
         order_id: orderId,
-        product_id: prod.id, // <-- ¡Agregado! Envía el ID del producto a Supabase
+        product_id: prod.id,
         product_name: prod.name,
         category: prod.category,
         unit_price: unitPrice,
+        price_per_kg: unitPrice, // <-- Agregado para cumplir con la restricción de la base de datos
         sale_unit: prod.sale_unit || 'kg',
         units_quantity: units,
         weight_quantity: weight,
