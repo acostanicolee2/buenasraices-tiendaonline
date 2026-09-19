@@ -1471,17 +1471,28 @@ async function saveNewOrderItem() {
       const isWeightBased = prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso' || prod.sale_unit === '1g';
       const quantity = isWeightBased ? weight : units;
 
+      // Si la unidad es en gramos o necesitamos calcular gramos aproximados
+      let gramsValue = 0;
+      if (prod.sale_unit === '1g') {
+        gramsValue = weight;
+      } else if (prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso') {
+        gramsValue = weight * 1000; // Convertimos kilos a gramos por seguridad
+      } else {
+        gramsValue = units * 100; // Valor estimativo por unidad si aplica
+      }
+
       const payload = {
         order_id: orderId,
         product_id: prod.id,
         product_name: prod.name,
         category: prod.category,
         unit_price: unitPrice,
-        price_per_kg: unitPrice, // <-- Agregado para cumplir con la restricción de la base de datos
+        price_per_kg: unitPrice,
         sale_unit: prod.sale_unit || 'kg',
         units_quantity: units,
         weight_quantity: weight,
-        quantity: parseFloat(quantity)
+        quantity: parseFloat(quantity),
+        grams: parseFloat(gramsValue) // <-- ¡Agregado para cumplir con la columna obligatoria!
       };
 
       const { error } = await db.from('order_items').insert(payload);
@@ -1493,7 +1504,6 @@ async function saveNewOrderItem() {
         loadOrders();
       }
     }
-
     function printReport(mode, zone) {
       if (mode === 'delivery') {
         document.body.classList.add('is-delivery-mode');
