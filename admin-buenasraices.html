@@ -623,6 +623,19 @@
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
+    const formatProductWeight = (weight, saleUnit) => {
+      const w = parseFloat(weight) || 0;
+      if (saleUnit === '1g') {
+        return `${Math.round(w)}g`;
+      }
+      if (saleUnit === 'kg' || saleUnit === 'unidad_peso') {
+        if (w < 1 && w > 0) {
+          return `${Math.round(w * 1000)}g`;
+        }
+        return `${w.toFixed(3).replace('.', ',')} kg`;
+      }
+      return `${w}`;
+    };
     // --- LÓGICA DE AUTENTICACIÓN ---
     async function checkAuth() {
       const { data: { session } } = await db.auth.getSession();
