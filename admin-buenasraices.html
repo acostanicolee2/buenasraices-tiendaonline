@@ -1338,20 +1338,34 @@
       const now = new Date();
 
       let startDate = new Date();
+      let endDate = new Date(8640000000000000); // Fecha muy lejana por defecto (futuro)
       let weeksFactor = 1;
 
       if (period === 'week') {
         const day = now.getDay();
         const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
-        startDate = new Date(now.setDate(diffToMonday));
+        startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
         startDate.setHours(0, 0, 0, 0);
         weeksFactor = 1;
         document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente a la Semana Actual';
       } else if (period === 'month') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        startDate.setHours(0, 0, 0, 0);
+        // CICLO DEL 5 AL 5
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const currentDay = now.getDate();
+
+        if (currentDay >= 5) {
+          // Del 5 de este mes al 5 del mes próximo
+          startDate = new Date(currentYear, currentMonth, 5, 0, 0, 0, 0);
+          endDate = new Date(currentYear, currentMonth + 1, 5, 23, 59, 59, 999);
+        } else {
+          // Del 5 del mes pasado al 5 de este mes
+          startDate = new Date(currentYear, currentMonth - 1, 5, 0, 0, 0, 0);
+          endDate = new Date(currentYear, currentMonth, 5, 23, 59, 59, 999);
+        }
+
         weeksFactor = 4.33;
-        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente al Mes Actual (4.33 semanas)';
+        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente al ciclo (del 5 al 5)';
       } else if (period === 'quarter') {
         startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
         startDate.setHours(0, 0, 0, 0);
@@ -1369,7 +1383,7 @@
         const orderDate = new Date(order.created_at || Date.now());
 
         if (isDelivered) {
-          if (orderDate >= startDate) {
+          if (orderDate >= startDate && orderDate <= endDate) {
             deliverySales += orderTotal;
             deliveredCount++;
             deliveredOrders.push({ ...order, computedTotal: orderTotal });
@@ -1380,7 +1394,7 @@
       let storeSalesTotal = 0;
       storeDailySales.forEach(s => {
         const sDate = new Date(s.date + 'T00:00:00');
-        if (sDate >= startDate) {
+        if (sDate >= startDate && sDate <= endDate) {
           storeSalesTotal += s.amount;
         }
       });
@@ -1428,7 +1442,6 @@
         </tr>
       `).join('');
     }
-
     async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
       let units = parseFloat(newUnits);
       let weight = parseFloat(newWeight);
