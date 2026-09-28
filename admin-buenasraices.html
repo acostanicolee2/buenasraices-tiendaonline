@@ -656,6 +656,26 @@
       }
       return `${w}`;
     };
+     // Variable global para recordar qué pestaña estamos viendo
+    let currentOrderFilter = 'Pendiente';
+
+    function setOrderFilter(status) {
+      currentOrderFilter = status;
+      
+      // Cambiar estilos visuales de los botones de las pestañas
+      const btnPending = document.getElementById('tabPending');
+      const btnHistory = document.getElementById('tabHistory');
+      
+      if (status === 'Pendiente') {
+        btnPending.className = 'btn btn-primary';
+        btnHistory.className = 'btn btn-secondary';
+      } else {
+        btnPending.className = 'btn btn-secondary';
+        btnHistory.className = 'btn btn-primary';
+      }
+      
+      renderOrdersList();
+    }
     
     // --- LÓGICA DE AUTENTICACIÓN ---
     async function checkAuth() {
@@ -799,27 +819,7 @@
       }
     }
 
-    // Variable global para recordar qué pestaña estamos viendo
-    let currentOrderFilter = 'Pendiente';
-
-    function setOrderFilter(status) {
-      currentOrderFilter = status;
-      
-      // Cambiar estilos visuales de los botones de las pestañas
-      const btnPending = document.getElementById('tabPending');
-      const btnHistory = document.getElementById('tabHistory');
-      
-      if (status === 'Pendiente') {
-        btnPending.className = 'btn btn-primary';
-        btnHistory.className = 'btn btn-secondary';
-      } else {
-        btnPending.className = 'btn btn-secondary';
-        btnHistory.className = 'btn btn-primary';
-      }
-      
-      renderOrdersList();
-    }
-    
+   
     // --- PRODUCTOS ---
     async function loadProducts() {
       const { data } = await db.from('products').select('*').order('display_order', { ascending: true });
