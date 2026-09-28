@@ -750,7 +750,10 @@
     }
     // --- EXPORTAR CATÁLOGO A EXCEL (CSV) ---
     function exportCatalogToExcel() {
-      if (!window.allProducts || window.allProducts.length === 0) {
+      // Usamos 'allProducts' directamente, o 'window.allProducts' como alternativa
+      const productosParaExportar = window.allProducts || (typeof allProducts !== 'undefined' ? allProducts : []);
+
+      if (!productosParaExportar || productosParaExportar.length === 0) {
         alert('No hay productos cargados en el catálogo para exportar.');
         return;
       }
@@ -760,7 +763,7 @@
       csvContent += "ID,Nombre,Categoría,Precio por Kg/Unidad,Unidad de Venta,Descripción\n";
 
       // Recorremos cada producto para armar las filas
-      window.allProducts.forEach(prod => {
+      productosParaExportar.forEach(prod => {
         // Limpiamos comillas dobles en los textos para que no rompan el formato CSV
         const name = `"${(prod.name || '').replace(/"/g, '""')}"`;
         const category = `"${(prod.category || '').replace(/"/g, '""')}"`;
