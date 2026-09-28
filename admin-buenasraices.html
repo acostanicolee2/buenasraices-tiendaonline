@@ -235,6 +235,10 @@
             <h1>Gestión del Catálogo</h1>
           </div>
           <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
+          <!-- Botón para exportar el catálogo -->
+<button class="btn btn-success" onclick="exportCatalogToExcel()" style="margin-bottom: 15px;">
+  📊 Exportar Catálogo a Excel
+</button>
         </div>
 
         <div class="card">
@@ -744,7 +748,46 @@
       notice.style.display = 'block';
       setTimeout(() => notice.style.display = 'none', 4000);
     }
+    // --- EXPORTAR CATÁLOGO A EXCEL (CSV) ---
+    function exportCatalogToExcel() {
+      if (!window.allProducts || window.allProducts.length === 0) {
+        alert('No hay productos cargados en el catálogo para exportar.');
+        return;
+      }
 
+      // Definimos las columnas que tendrá el Excel
+      let csvContent = "\uFEFF"; // BOM para que Excel reconozca las tildes y eñes (UTF-8)
+      csvContent += "ID,Nombre,Categoría,Precio por Kg/Unidad,Unidad de Venta,Descripción\n";
+
+      // Recorremos cada producto para armar las filas
+      window.allProducts.forEach(prod => {
+        // Limpiamos comillas dobles en los textos para que no rompan el formato CSV
+        const name = `"${(prod.name || '').replace(/"/g, '""')}"`;
+        const category = `"${(prod.category || '').replace(/"/g, '""')}"`;
+        const price = prod.price_per_kg || prod.price || 0;
+        const saleUnit = `"${(prod.sale_unit || 'kg').replace(/"/g, '""')}"`;
+        const description = `"${(prod.description || '').replace(/"/g, '""')}"`;
+
+        csvContent += `${prod.id},${name},${category},${price},${saleUnit},${description}\n`;
+      });
+
+      // Creamos un archivo virtual y disparamos la descarga automática
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      const fechaActual = new Date().toISOString().slice(0, 10);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Catalogo_Buenas_Raices_${fechaActual}.csv`);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (typeof showNotice === 'function') {
+        showNotice('¡Catálogo exportado con éxito!');
+      }
+    }
     // --- PRODUCTOS ---
     async function loadProducts() {
       const { data } = await db.from('products').select('*').order('display_order', { ascending: true });
