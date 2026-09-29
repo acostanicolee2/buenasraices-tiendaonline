@@ -517,27 +517,31 @@
     </main>
   </div>
 
-  <!-- MODAL: RESUMEN DE ARMADO -->
+<!-- MODAL: RESUMEN DE ARMADO -->
   <div id="summaryModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
         <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
       </div>
-      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección (desglosando los combos automáticamente):</p>
+
+      <!-- Filtro por Semana dentro del modal -->
+      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;" class="no-print">
+        <label for="summaryWeekSelect" style="font-weight: bold; font-size: 13px;">Filtrar pedidos de:</label>
+        <select id="summaryWeekSelect" onchange="refreshSummaryModal()" style="padding: 6px 10px; font-weight: bold; font-size: 13px;">
+          <option value="ALL">Todas las semanas (Total actual)</option>
+        </select>
+      </div>
       
       <div class="table-responsive">
         <table>
           <thead>
             <tr>
               <th>Producto</th>
-              <th>Cantidad Total Solicitada</th>
-              <th>Incluido en</th>
+              <th>Cantidad Total Requerida</th>
             </tr>
           </thead>
-          <tbody id="summaryTableBody">
-            <!-- Se llena dinámicamente -->
-          </tbody>
+          <tbody id="summaryTableBody"></tbody>
         </table>
       </div>
 
