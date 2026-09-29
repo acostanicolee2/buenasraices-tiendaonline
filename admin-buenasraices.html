@@ -1300,7 +1300,7 @@
     }
 
    
-     // Función auxiliar para formatear cantidades de forma exacta y legible
+    //  Función auxiliar para formatear cantidades de forma exacta y legible
     function formatExactSummaryQuantity(totalWeight, totalUnits, unit) {
       const u = (unit || '').toLowerCase().trim();
 
@@ -1327,14 +1327,14 @@
       }
     }
 
-    // Función principal que genera los datos del resumen
+    // Función principal que genera los datos del resumen (desglosando combos y bolsones)
     async function generateSummaryData() {
       const zone = currentSummaryZone;
       const selectedWeek = document.getElementById('summaryWeekSelect')?.value || 'ALL';
 
       let filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
       
-      // Excluir entregados (opcional, podés quitarlo si querés incluir entregados también)
+      // Excluir entregados (puedes quitarlo si también quieres incluir los entregados)
       filtered = filtered.filter(o => (o.status || '').trim() !== 'Entregado');
 
       if (selectedWeek !== 'ALL') {
@@ -1359,26 +1359,42 @@
       for (const order of filtered) {
         if (!order.order_items) continue;
         for (const item of order.order_items) {
-          const catProd = allProducts.find(p => p.name.trim().toLowerCase() === item.product_name.trim().toLowerCase());
+          const itemNameLower = (item.product_name || '').trim().toLowerCase();
+          const catProd = allProducts.find(p => (p.name || '').trim().toLowerCase() === itemNameLower);
+          
           const units = item.units_quantity || 1;
           const weight = item.weight_quantity ?? item.quantity ?? 1;
 
-          if (catProd && (catProd.category || '').toLowerCase() === 'combos') {
+          // Verificamos si el producto es un combo, bolsón o contiene componentes configurados
+          const categoryName = (catProd?.category || item.category || '').toLowerCase();
+          const isComboOrBolson = categoryName === 'combos' || categoryName.includes('bolson') || categoryName.includes('bolsón');
+
+          if (catProd && isComboOrBolson) {
+            // Buscamos los componentes configurados para este combo/bolsón en Supabase
             const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catProd.id);
-            if (comboComponents?.length) {
+            
+            if (comboComponents && comboComponents.length > 0) {
               comboComponents.forEach(comp => {
                 const cProd = allProducts.find(p => p.id === comp.component_product_id);
-                if (cProd) addSummary(cProd.name, Number(comp.quantity) * units, Number(comp.quantity) * weight, comp.unit_type || 'kg');
+                if (cProd) {
+                  // Multiplicamos la cantidad del componente por las unidades del combo pedidas
+                  const compQty = Number(comp.quantity) * units;
+                  const compWeight = Number(comp.quantity) * weight;
+                  addSummary(cProd.name, compQty, compWeight, comp.unit_type || cProd.sale_unit || 'kg');
+                }
               });
             } else {
+              // Si no tiene componentes configurados, se suma el combo como ítem único
               addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
             }
           } else {
-            addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
+            // Producto normal individual
+            addSummary(item.product_name, units, weight, item.sale_unit || 'kg');
           }
         }
       }
 
+      // Dibujar la tabla con los totales exactos
       document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
         <tr>
           <td><b>${i.name}</b></td>
