@@ -1305,7 +1305,39 @@
 
       // Filtrar por zona y opcionalmente por semana
       let filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
-      
+      // Función auxiliar para formatear cantidades de forma exacta y legible
+    function formatExactSummaryQuantity(totalWeight, totalUnits, unit) {
+      const u = (unit || '').toLowerCase().trim();
+
+      // Si es por unidad o docena
+      if (u === 'unidad' || u === 'unidades' || u === 'docena') {
+        return `${Math.round(totalUnits)} ${u}`;
+      }
+
+      // Si es gramera específica (ej. 1g, 50g, 100g)
+      if (u === '1g') {
+        return `${Math.round(totalWeight)}g`;
+      }
+
+      // Si es por peso (kg o unidad con peso variable)
+      if (u === 'kg' || u === 'unidad_peso') {
+        // Si el peso total es menor a 1 kg (ej: 0.600 kg), mostrar en gramos
+        if (totalWeight < 1 && totalWeight > 0) {
+          const gramos = Math.round(totalWeight * 1000);
+          return `${gramos}g`;
+        }
+        // Si tiene decimales exactos (ej: 3.5 kg)
+        // Reemplazamos el punto por coma para mantener el formato visual limpio en español
+        return `${totalWeight.toFixed(3).replace(/\.?0+$/, '').replace('.', ',')} kg`;
+      }
+
+      // Fallback por defecto
+      if (totalWeight >= 1) {
+        return `${totalWeight.toFixed(2).replace('.', ',')} kg`;
+      } else {
+        return `${Math.round(totalWeight * 1000)}g`;
+      }
+    
       // Excluir los ya entregados si solo quieres armar pendientes (puedes ajustarlo si prefieres incluir todos)
       filtered = filtered.filter(o => (o.status || '').trim() !== 'Entregado');
 
@@ -1350,11 +1382,10 @@
           }
         }
       }
-
-      document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
+    document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
         <tr>
           <td><b>${i.name}</b></td>
-          <td><b style="font-size: 16px; color: var(--leaf);">${['kg', 'unidad_peso', '1g'].includes(i.unit) ? i.totalWeight.toFixed(2) + ' kg' : i.totalUnits + ' ' + i.unit}</b></td>
+          <td><b style="font-size: 16px; color: var(--leaf);">${formatExactSummaryQuantity(i.totalWeight, i.totalUnits, i.unit)}</b></td>
         </tr>
       `).join('') || '<tr><td colspan="2" style="text-align:center; color: var(--muted);">No hay productos para esta selección.</td></tr>';
     }
