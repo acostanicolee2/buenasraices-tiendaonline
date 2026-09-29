@@ -1299,9 +1299,7 @@
       await generateSummaryData();
     }
 
-    async function generateSummaryData() {
-      const zone = currentSummaryZone;
-      const selectedWeek = document.getElementById('summaryWeekSelect')?.value || 'ALL';
+   
      // Función auxiliar para formatear cantidades de forma exacta y legible
     function formatExactSummaryQuantity(totalWeight, totalUnits, unit) {
       const u = (unit || '').toLowerCase().trim();
