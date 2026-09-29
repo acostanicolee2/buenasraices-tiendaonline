@@ -234,11 +234,10 @@
             <button class="menu-toggle-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Menú">☰</button>
             <h1>Gestión del Catálogo</h1>
           </div>
-          <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
-          <!-- Botón para exportar el catálogo -->
-<button class="btn btn-success" onclick="exportCatalogToExcel()" style="margin-bottom: 15px;">
-  📊 Exportar Catálogo a Excel
-</button>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-success" onclick="exportCatalogToExcel()">📊 Exportar Catálogo a Excel</button>
+            <button class="btn btn-secondary" onclick="resetForm()">+ Nuevo Producto</button>
+          </div>
         </div>
 
         <div class="card">
@@ -352,6 +351,12 @@
           </div>
         </div>
 
+        <!-- Pestañas para filtrar pedidos por Estado -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;" class="no-print">
+          <button id="tabPending" class="btn" onclick="setOrderFilter('Pendiente')">⏳ Pendientes</button>
+          <button id="tabHistory" class="btn btn-secondary" onclick="setOrderFilter('Entregado')">✅ Historial (Entregados)</button>
+        </div>
+
         <div id="ordersContainer">
           <p style="color: var(--muted);">Cargando pedidos...</p>
         </div>
@@ -366,11 +371,6 @@
             <button class="btn btn-secondary" onclick="printReport('delivery', 'ALL')">🚚 PDF Hoja de Reparto (Global)</button>
           </div>
         </div>
-        <!-- Pestañas para filtrar pedidos -->
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;" class="no-print">
-      <button id="tabPending" class="btn btn-primary" onclick="setOrderFilter('Pendiente')">⏳ Pendientes</button>
-      <button id="tabHistory" class="btn btn-secondary" onclick="setOrderFilter('Entregado')">✅ Historial (Entregados)</button>
-    </div>
       </section>
 
       <!-- SECCIÓN 3: CONTABILIDAD PROFESIONAL -->
@@ -420,7 +420,7 @@
           </div>
         </div>
 
-        <!-- CONFIGURACIÓN DE EGRESOS (SUELDOS Y GASTOS FIJOS TIENDA) -->
+        <!-- CONFIGURACIÓN DE EGRESOS -->
         <div class="card">
           <h2>👥 Configuración de Personal y Costos Fijos</h2>
           <div class="form-grid">
@@ -523,7 +523,7 @@
         <h2 style="margin: 0; font-size: 20px;" id="summaryModalTitle">📋 Resumen de Armado</h2>
         <button class="btn btn-secondary btn-sm no-print" onclick="closeSummaryModal()">✕ Cerrar</button>
       </div>
-      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección (desglosando los combos automáticamente):</p>
+      <p style="font-size: 13px; color: var(--muted);" class="no-print">Lista total de insumos y cantidades requeridas para armar los pedidos de esta selección:</p>
       
       <div class="table-responsive">
         <table>
@@ -534,9 +534,7 @@
               <th>Incluido en</th>
             </tr>
           </thead>
-          <tbody id="summaryTableBody">
-            <!-- Se llena dinámicamente -->
-          </tbody>
+          <tbody id="summaryTableBody"></tbody>
         </table>
       </div>
 
@@ -558,7 +556,7 @@
       <input type="hidden" id="configComboId">
       
       <div style="background: #f3edd9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13.5px;">
-        Agregá los productos y cantidades que incluye este combo para que el <b>Resumen de Armado</b> y la tienda los muestren correctamente.
+        Agregá los productos y cantidades que incluye este combo para que el <b>Resumen de Armado</b> los desglose correctamente.
       </div>
 
       <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto; align-items: flex-end; margin-bottom: 20px;">
@@ -605,7 +603,7 @@
     </div>
   </div>
 
-  <!-- Modal para Agregar Producto a un Pedido -->
+  <!-- MODAL: AGREGAR PRODUCTO A PEDIDO -->
   <div id="addItemModal" class="modal-overlay" style="display: none;">
     <div class="modal-card" style="max-width: 500px;">
       <h3 style="margin-top:0;">Agregar Producto al Pedido</h3>
@@ -640,47 +638,37 @@
     let allProducts = [];
     let rawOrders = [];
     let storeDailySales = [];
+    let currentOrderFilter = 'Pendiente';
 
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
 
     const formatProductWeight = (weight, saleUnit) => {
       const w = parseFloat(weight) || 0;
-      if (saleUnit === '1g') {
-        return `${Math.round(w)}g`;
-      }
+      if (saleUnit === '1g') return `${Math.round(w)}g`;
       if (saleUnit === 'kg' || saleUnit === 'unidad_peso') {
-        if (w < 1 && w > 0) {
-          return `${Math.round(w * 1000)}g`;
-        }
+        if (w < 1 && w > 0) return `${Math.round(w * 1000)}g`;
         return `${w.toFixed(3).replace('.', ',')} kg`;
       }
       return `${w}`;
     };
-     // Variable global para recordar qué pestaña estamos viendo
-    let currentOrderFilter = 'Pendiente';
 
     function setOrderFilter(status) {
       currentOrderFilter = status;
-      
-      // Cambiar estilos visuales de los botones de las pestañas
       const btnPending = document.getElementById('tabPending');
       const btnHistory = document.getElementById('tabHistory');
       
       if (status === 'Pendiente') {
-        btnPending.className = 'btn btn-primary';
+        btnPending.className = 'btn';
         btnHistory.className = 'btn btn-secondary';
       } else {
         btnPending.className = 'btn btn-secondary';
-        btnHistory.className = 'btn btn-primary';
+        btnHistory.className = 'btn';
       }
-      
-      renderOrdersList();
+      filterOrdersByZone();
     }
-    
-    // --- LÓGICA DE AUTENTICACIÓN ---
+
     async function checkAuth() {
       const { data: { session } } = await db.auth.getSession();
-      
       if (session) {
         document.getElementById('loginScreen').style.display = 'none';
         loadProducts();
@@ -695,11 +683,9 @@
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
       const errorEl = document.getElementById('loginError');
-      
       errorEl.style.display = 'none';
 
       const { data, error } = await db.auth.signInWithPassword({ email, password });
-
       if (error) {
         errorEl.textContent = 'Credenciales inválidas: ' + error.message;
         errorEl.style.display = 'block';
@@ -716,8 +702,7 @@
     }
 
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
+      document.getElementById('sidebar').classList.toggle('collapsed');
     }
 
     function isButcherCategory(catName) {
@@ -738,11 +723,7 @@
     function triggerItemSave(itemId, orderId, unitPrice, saleUnit) {
       const unitsInput = document.getElementById(`units-${itemId}`);
       const weightInput = document.getElementById(`weight-${itemId}`);
-      
-      const newUnits = unitsInput ? unitsInput.value : 1;
-      const newWeight = weightInput ? weightInput.value : 1;
-
-      updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit);
+      updateItemValues(itemId, orderId, unitsInput ? unitsInput.value : 1, weightInput ? weightInput.value : 1, unitPrice, saleUnit);
     }
 
     function updatePriceLabel() {
@@ -775,52 +756,33 @@
       setTimeout(() => notice.style.display = 'none', 4000);
     }
     
-    // --- EXPORTAR CATÁLOGO A EXCEL (CSV) ---
     function exportCatalogToExcel() {
-      // Usamos 'allProducts' directamente, o 'window.allProducts' como alternativa
-      const productosParaExportar = window.allProducts || (typeof allProducts !== 'undefined' ? allProducts : []);
-
-      if (!productosParaExportar || productosParaExportar.length === 0) {
+      const productosParaExportar = allProducts || [];
+      if (!productosParaExportar.length) {
         alert('No hay productos cargados en el catálogo para exportar.');
         return;
       }
 
-      // Definimos las columnas que tendrá el Excel
-      let csvContent = "\uFEFF"; // BOM para que Excel reconozca las tildes y eñes (UTF-8)
-      csvContent += "ID,Nombre,Categoría,Precio por Kg/Unidad,Unidad de Venta,Descripción\n";
-
-      // Recorremos cada producto para armar las filas
+      let csvContent = "\uFEFFID,Nombre,Categoría,Precio,Unidad\n";
       productosParaExportar.forEach(prod => {
-        // Limpiamos comillas dobles en los textos para que no rompan el formato CSV
         const name = `"${(prod.name || '').replace(/"/g, '""')}"`;
         const category = `"${(prod.category || '').replace(/"/g, '""')}"`;
-        const price = prod.price_per_kg || prod.price || 0;
+        const price = prod.price_per_kg || 0;
         const saleUnit = `"${(prod.sale_unit || 'kg').replace(/"/g, '""')}"`;
-        const description = `"${(prod.description || '').replace(/"/g, '""')}"`;
-
-        csvContent += `${prod.id},${name},${category},${price},${saleUnit},${description}\n`;
+        csvContent += `${prod.id},${name},${category},${price},${saleUnit}\n`;
       });
 
-      // Creamos un archivo virtual y disparamos la descarga automática
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      
-      const fechaActual = new Date().toISOString().slice(0, 10);
       link.setAttribute('href', url);
-      link.setAttribute('download', `Catalogo_Buenas_Raices_${fechaActual}`);
-      
+      link.setAttribute('download', `Catalogo_Buenas_Raices_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      if (typeof showNotice === 'function') {
-        showNotice('¡Catálogo exportado con éxito!');
-      }
+      showNotice('¡Catálogo exportado con éxito!');
     }
 
-   
-    // --- PRODUCTOS ---
     async function loadProducts() {
       const { data } = await db.from('products').select('*').order('display_order', { ascending: true });
       allProducts = data || [];
@@ -845,7 +807,7 @@
             <td>${p.sale_unit || 'kg'}</td>
             <td>${p.display_order || 1}</td>
             <td>
-              ${isCombo ? `<button class="btn btn-success btn-sm" onclick="openComboModal('${p.id}', '${p.name}')">⚙️ Configurar Combo</button>` : ''}
+              ${isCombo ? `<button class="btn btn-success btn-sm" onclick="openComboModal('${p.id}', '${p.name}')">⚙️ Configurar</button>` : ''}
               <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
               <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${p.name}')">Eliminar</button>
             </td>
@@ -903,7 +865,6 @@
       loadProducts();
     }
 
-    // --- GESTIÓN DE COMPONENTES DE COMBOS ---
     async function openComboModal(comboId, comboName) {
       document.getElementById('configComboId').value = comboId;
       document.getElementById('comboModalTitle').textContent = `⚙️ Configurar Combo: ${comboName}`;
@@ -939,44 +900,31 @@
         unit_type: unit
       });
 
-      if (error) {
-        showNotice('Error al agregar componente: ' + error.message);
-      } else {
-        showNotice('¡Componente agregado al combo!');
+      if (error) showNotice('Error: ' + error.message);
+      else {
+        showNotice('¡Componente agregado!');
         document.getElementById('comboCompQty').value = '1';
-        setTimeout(() => loadComboComponents(comboId), 200);
+        loadComboComponents(comboId);
       }
     }
 
-   async function loadComboComponents(comboId) {
+    async function loadComboComponents(comboId) {
       const tbody = document.getElementById('comboComponentsTableBody');
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Cargando componentes...</td></tr>';
-
-      console.log("Buscando componentes para el combo ID:", comboId);
-
-      const { data, error } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
-
-      console.log("Respuesta de Supabase (combo_items):", data, error);
-
-      if (error) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--danger);">Error al cargar: ${error.message}</td></tr>`;
-        return;
-      }
+      const { data } = await db.from('combo_items').select('*').eq('combo_product_id', comboId);
 
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Este combo todavía no tiene componentes cargados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Sin componentes.</td></tr>';
         return;
       }
 
       tbody.innerHTML = data.map(item => {
         const compProd = allProducts.find(p => p.id === item.component_product_id);
-        const compName = compProd ? compProd.name : 'Producto';
         return `
           <tr>
-            <td><b>${compName}</b></td>
+            <td><b>${compProd ? compProd.name : 'Producto'}</b></td>
             <td>${item.quantity}</td>
             <td>${item.unit_type || 'kg'}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕ Eliminar</button></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteComboComponent('${item.id}', '${comboId}')">✕</button></td>
           </tr>
         `;
       }).join('');
@@ -987,22 +935,10 @@
       loadComboComponents(comboId);
     }
 
-    // --- CARGAR Y GESTIONAR PEDIDOS ---
     async function loadOrders() {
-      const container = document.getElementById('ordersContainer');
-      if (container) container.innerHTML = '<p style="color: var(--muted);">Cargando pedidos...</p>';
-
       if (!allProducts.length) await loadProducts();
-
-      const { data, error } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
-
-      if (error) {
-        if (container) container.innerHTML = '<p style="color: var(--danger);">Error al cargar pedidos: ' + error.message + '</p>';
-        return;
-      }
-
+      const { data } = await db.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false });
       rawOrders = (data || []).filter(order => order.order_items && order.order_items.length > 0);
-      
       populateZoneFilter();
       filterOrdersByZone();
     }
@@ -1015,18 +951,21 @@
       
       select.innerHTML = '<option value="ALL">Todas las Zonas</option>' + 
         zones.map(z => `<option value="${z}">${z}</option>`).join('');
-      
       select.value = current;
     }
 
     function filterOrdersByZone() {
-      const select = document.getElementById('zoneFilter');
-      if (!select) return;
-      const selectedZone = select.value;
-      let filtered = rawOrders;
+      const selectedZone = document.getElementById('zoneFilter')?.value || 'ALL';
+      
+      // Filtrar por Estado (Pestaña activa) y Zona
+      let filtered = rawOrders.filter(order => {
+        const isDelivered = order.status === 'Entregado';
+        const matchesStatus = currentOrderFilter === 'Entregado' ? isDelivered : !isDelivered;
+        return matchesStatus;
+      });
 
       if (selectedZone !== 'ALL') {
-        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+        filtered = filtered.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
       }
 
       renderOrdersGroupedByZone(filtered);
@@ -1035,8 +974,8 @@
     function renderOrdersGroupedByZone(ordersList) {
       const container = document.getElementById('ordersContainer');
       if (!container) return;
-      if (!ordersList || ordersList.length === 0) {
-        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos para mostrar.</p></div>';
+      if (!ordersList.length) {
+        container.innerHTML = '<div class="card"><p style="margin: 0; color: var(--muted);">No hay pedidos para mostrar en esta sección.</p></div>';
         return;
       }
 
@@ -1047,49 +986,24 @@
         grouped[zoneName].push(order);
       });
 
-      let html = '';
-
-      for (const [zone, zoneOrders] of Object.entries(grouped)) {
-        html += `
-          <div class="zone-group" id="zone-group-${zone.replace(/\s+/g, '-')}">
-            <div class="zone-header">
-              <div>
-                <span>Zona: ${zone}</span>
-                <span style="font-size: 14px; font-weight: normal; margin-left: 8px;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
-              </div>
-              <div class="no-print" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-sm btn-success" onclick="openSummaryModal('${zone}')">📋 Resumen Armado Zona</button>
-                <button class="btn btn-sm" onclick="printReport('full', '${zone}')">📄 Pedidos Zona</button>
-                <button class="btn btn-secondary btn-sm" onclick="printReport('delivery', '${zone}')">🚚 Reparto Zona</button>
-              </div>
+      container.innerHTML = Object.entries(grouped).map(([zone, zoneOrders]) => `
+        <div class="zone-group">
+          <div class="zone-header">
+            <div>
+              <span>Zona: ${zone}</span>
+              <span style="font-size: 14px; font-weight: normal; margin-left: 8px;" class="no-print">(${zoneOrders.length} pedido${zoneOrders.length > 1 ? 's' : ''})</span>
             </div>
-            ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
+            <div class="no-print" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-sm btn-success" onclick="openSummaryModal('${zone}')">📋 Resumen Armado</button>
+              <button class="btn btn-sm" onclick="printReport('full', '${zone}')">📄 PDF Pedidos</button>
+              <button class="btn btn-secondary btn-sm" onclick="printReport('delivery', '${zone}')">🚚 Hoja Reparto</button>
+            </div>
           </div>
-        `;
-      }
-
-      container.innerHTML = html;
+          ${zoneOrders.map(order => renderSingleOrderCard(order)).join('')}
+        </div>
+      `).join('');
     }
-    function renderOrdersList() {
-      const container = document.getElementById('ordersContainerId'); // (Reemplaza con el ID real del contenedor de tus tarjetas de pedidos)
-      if (!container) return;
 
-      // Filtramos según la pestaña activa (Pendientes o Entregados)
-      const filteredOrders = rawOrders.filter(order => {
-        if (currentOrderFilter === 'Pendiente') {
-          return order.status !== 'Entregado'; // Muestra todo lo que no esté entregado
-        } else {
-          return order.status === 'Entregado'; // Muestra solo el historial de entregados
-        }
-      });
-
-      if (filteredOrders.length === 0) {
-        container.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--muted);">No hay pedidos en la sección "${currentOrderFilter === 'Pendiente' ? 'Pendientes' : 'Historial'}".</div>`;
-        return;
-      }
-
-      container.innerHTML = filteredOrders.map(order => renderSingleOrderCard(order)).join('');
-    }
     function renderSingleOrderCard(order) {
       const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('es-AR') : 'Sin fecha';
       const isDeliveryMode = document.body.classList.contains('is-delivery-mode');
@@ -1098,32 +1012,19 @@
       let totalCalculado = 0;
       let itemsRows = '';
 
-      if (order.order_items && order.order_items.length > 0) {
+      if (order.order_items) {
         const itemsToRender = isDeliveryMode 
-          ? order.order_items.filter(item => {
-              let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
-              const cat = item.category || (catalogProd ? catalogProd.category : '') || '';
-              return isButcherCategory(cat);
-            })
+          ? order.order_items.filter(item => isButcherCategory(item.category || allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase())?.category))
           : order.order_items;
 
         itemsRows = itemsToRender.map(item => {
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
-          
+          const catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
           const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
           const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
-          
           const units = item.units_quantity || 1;
-          
-          let defaultWeight = 1;
-          if (item.weight_quantity !== undefined && item.weight_quantity !== null && item.weight_quantity > 0) {
-            defaultWeight = item.weight_quantity;
-          } else if (item.quantity !== undefined && item.quantity !== null && item.quantity > 0) {
-            defaultWeight = item.quantity;
-          }
+          const defaultWeight = item.weight_quantity ?? item.quantity ?? 1;
 
-          const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
-          
+          const isWeightBased = ['kg', 'unidad_peso', '1g'].includes(saleUnit);
           const subtotal = isWeightBased ? (defaultWeight * unitPrice) : (units * unitPrice);
           totalCalculado += subtotal;
 
@@ -1132,42 +1033,21 @@
               <td><b>${item.product_name}</b></td>
               <td>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <span style="font-weight: bold; color: var(--leaf); min-width: 70px;">
-                    ${formatProductWeight(defaultWeight, saleUnit)}
-                  </span>
+                  <span style="font-weight: bold; color: var(--leaf); min-width: 70px;">${formatProductWeight(defaultWeight, saleUnit)}</span>
                   <div class="no-print" style="display: flex; gap: 4px; align-items: center;">
-                    <label style="font-size: 10px; color: var(--muted);">Cant:
-                      <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" 
-                        style="width: 45px; padding: 2px; font-size: 12px;"
-                        onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
-                    </label>
-                    <label style="font-size: 10px; color: var(--muted);">Peso/Kg:
-                      <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" 
-                        style="width: 55px; padding: 2px; font-size: 12px;"
-                        onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
-                    </label>
-                    <button type="button" class="btn-save-item" title="Guardar Cambios" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓</button>
+                    <input id="units-${item.id}" type="number" step="1" min="1" value="${units}" style="width: 45px; padding: 2px;" onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                    <input id="weight-${item.id}" type="number" step="0.01" min="0" value="${defaultWeight}" style="width: 55px; padding: 2px;" onkeydown="handleEnterKey(event, '${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">
+                    <button type="button" class="btn-save-item" onclick="triggerItemSave('${item.id}', '${order.id}', ${unitPrice}, '${saleUnit}')">✓</button>
                   </div>
                 </div>
               </td>
               <td class="price-col"><b>${money(unitPrice)}</b> / ${saleUnit}</td>
               <td class="price-col"><b style="color: var(--leaf);">${money(subtotal)}</b></td>
-              <td class="no-print" style="text-align: right;">
-                <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}', '${order.id}')">✕</button>
-              </td>
+              <td class="no-print" style="text-align: right;"><button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${item.id}')">✕</button></td>
             </tr>
           `;
         }).join('');
       }
-
-      const customerName = order.customer_name || order.name || 'Sin nombre';
-      const phone = order.phone || order.telefono || '';
-      const street = order.address || order.shipping_address || order.street || order.direccion || 'Retira en local / Sin dirección';
-      
-      // Mapeo corregido para entre calles y localidad independiente
-      const entrecalles = order.entre_calles || order.entrecalles || order.cross_streets || order.reference || order.referencia || 'No especificado';
-      const localidad = order.city || order.localidad || 'Sin Localidad';
-      const zona = order.zone || 'Sin Zona';
 
       return `
         <div class="order-card" id="order-card-${order.id}">
@@ -1175,55 +1055,38 @@
             <div>
               <span class="order-title">Pedido #${order.id}</span>
               <span class="order-date" style="margin-left: 10px;">${orderDate}</span>
-              <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">
-                ${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}
-              </span>
+              <span class="badge-status ${isDelivered ? 'badge-delivered' : 'badge-pending'}" style="margin-left: 10px;">${isDelivered ? '✓ Entregado' : '⏳ Pendiente'}</span>
             </div>
             <div style="display: flex; gap: 8px;">
-              <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">
-                ${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')" title="Eliminar este pedido completo">🗑️ Eliminar</button>
+              <button class="btn btn-sm ${isDelivered ? 'btn-secondary' : 'btn-success'}" onclick="toggleOrderStatus('${order.id}', '${isDelivered ? 'Pendiente' : 'Entregado'}')">${isDelivered ? 'Marcar Pendiente' : '✓ Marcar Entregado'}</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFullOrder('${order.id}')">🗑️ Eliminar</button>
             </div>
           </div>
 
           <div class="order-info">
-            <div><b>Nombre y Apellido:</b> ${customerName}</div>
-            <div><b>Teléfono:</b> ${phone ? `<a href="https://wa.me/${phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${phone}</a>` : 'N/A'}</div>
-            
-            <div style="grid-column: 1 / -1; font-size: 15px;">
-              <b>Dirección:</b> <span style="text-decoration: underline;">${street}</span>
-            </div>
-
-            <div style="grid-column: 1 / -1; font-size: 14px;">
-              <b>Entre calles:</b> ${entrecalles}
-            </div>
-
-            <div><b>Localidad:</b> ${localidad}</div>
-            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${zona}</span></div>
-            
+            <div><b>Nombre:</b> ${order.customer_name || order.name || 'Sin nombre'}</div>
+            <div><b>Teléfono:</b> ${order.phone ? `<a href="https://wa.me/${order.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--leaf); font-weight: bold;">${order.phone}</a>` : 'N/A'}</div>
+            <div style="grid-column: 1 / -1;"><b>Dirección:</b> <u>${order.address || order.street || 'Retira en local'}</u></div>
+            <div style="grid-column: 1 / -1;"><b>Entre calles:</b> ${order.entre_calles || order.cross_streets || 'No especificado'}</div>
+            <div><b>Localidad:</b> ${order.city || order.localidad || 'Sin Localidad'}</div>
+            <div><b>Zona:</b> <span style="background: var(--lime); padding: 2px 8px; border-radius: 6px; font-weight: bold;">${order.zone || 'Sin Zona'}</span></div>
             ${order.notes ? `<div class="order-info-notes" style="grid-column: 1 / -1;"><b>Notas:</b> ${order.notes}</div>` : ''}
           </div>
 
-          <h4 style="margin: 10px 0 5px; font-size: 14px;">Detalle de la compra:</h4>
           <table class="order-items-table">
             <thead>
               <tr>
                 <th>Producto</th>
                 <th>Cantidad / Editar</th>
-                <th class="price-col">Precio Unit. / kg</th>
+                <th class="price-col">Precio Unit.</th>
                 <th class="price-col">Subtotal</th>
                 <th class="no-print" style="width: 40px;"></th>
               </tr>
             </thead>
-            <tbody>
-              ${itemsRows}
-            </tbody>
+            <tbody>${itemsRows}</tbody>
           </table>
 
-          <div class="no-print" style="margin-top: 10px;">
-            <button class="btn btn-secondary btn-sm" onclick="openAddItemModal('${order.id}')">+ Agregar Producto a este Pedido</button>
-          </div>
+          <div class="no-print" style="margin-top: 10px;"><button class="btn btn-secondary btn-sm" onclick="openAddItemModal('${order.id}')">+ Agregar Producto</button></div>
 
           <div class="order-total" style="text-align: right; margin-top: 15px; font-size: 18px; border-top: 1px dashed var(--line); padding-top: 10px;">
             <b>Total del Pedido: <span style="color: var(--leaf); font-size: 20px;">${money(totalCalculado)}</span></b>
@@ -1233,121 +1096,67 @@
     }
 
     async function openSummaryModal(zone) {
-      let filtered = rawOrders;
-      const title = document.getElementById('summaryModalTitle');
+      const filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
+      document.getElementById('summaryModalTitle').textContent = `📋 Resumen de Armado - ${zone === 'ALL' ? 'General' : zone}`;
       
-      if (zone !== 'ALL') {
-        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
-        title.textContent = `📋 Resumen de Armado - Zona: ${zone}`;
-      } else {
-        title.textContent = `📋 Resumen de Armado General (Todas las Zonas)`;
-      }
-
       const summary = {};
-
-      function addStoSummary(name, totalUnits, totalWeight, unit) {
-        const key = name.trim();
-        if (!summary[key]) {
-          summary[key] = { name: key, totalUnits: 0, totalWeight: 0, unit: unit, ordersCount: 0 };
-        }
-        summary[key].totalUnits += totalUnits;
-        summary[key].totalWeight += totalWeight;
-        summary[key].ordersCount += 1;
-      }
+      const addSummary = (name, totalUnits, totalWeight, unit) => {
+        if (!summary[name]) summary[name] = { name, totalUnits: 0, totalWeight: 0, unit };
+        summary[name].totalUnits += totalUnits;
+        summary[name].totalWeight += totalWeight;
+      };
 
       for (const order of filtered) {
         if (!order.order_items) continue;
-        
         for (const item of order.order_items) {
-          const productName = item.product_name.trim();
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
-          
+          const catProd = allProducts.find(p => p.name.trim().toLowerCase() === item.product_name.trim().toLowerCase());
           const units = item.units_quantity || 1;
-          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
-          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
+          const weight = item.weight_quantity ?? item.quantity ?? 1;
 
-          if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
-            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
-            
-            if (comboComponents && comboComponents.length > 0) {
+          if (catProd && (catProd.category || '').toLowerCase() === 'combos') {
+            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catProd.id);
+            if (comboComponents?.length) {
               comboComponents.forEach(comp => {
-                const compProduct = allProducts.find(p => p.id === comp.component_product_id);
-                if (compProduct) {
-                  const compUnits = Number(comp.quantity) * units;
-                  const compWeight = Number(comp.quantity) * weight;
-                  addStoSummary(compProduct.name, compUnits, compWeight, comp.unit_type || compProduct.sale_unit || 'kg');
-                }
+                const cProd = allProducts.find(p => p.id === comp.component_product_id);
+                if (cProd) addSummary(cProd.name, Number(comp.quantity) * units, Number(comp.quantity) * weight, comp.unit_type || 'kg');
               });
             } else {
-              addStoSummary(productName, units, weight, unit);
+              addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
             }
           } else {
-            addStoSummary(productName, units, weight, unit);
+            addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
           }
         }
       }
 
-      const tbody = document.getElementById('summaryTableBody');
-      const items = Object.values(summary);
-
-      if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay productos para mostrar en este resumen.</td></tr>';
-      } else {
-        tbody.innerHTML = items.map(i => {
-          let qtyText = '';
-          if (i.unit === 'kg' || i.unit === 'unidad_peso' || i.unit === '1g') {
-            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalWeight.toFixed(2)} kg</b> (${i.totalUnits} un.)`;
-          } else {
-            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalUnits} ${i.unit}</b>`;
-          }
-
-          return `
-            <tr>
-              <td><b>${i.name}</b></td>
-              <td>${qtyText}</td>
-              <td>Pedidos generales</td>
-            </tr>
-          `;
-        }).join('');
-      }
+      document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
+        <tr>
+          <td><b>${i.name}</b></td>
+          <td><b style="font-size: 16px; color: var(--leaf);">${['kg', 'unidad_peso', '1g'].includes(i.unit) ? i.totalWeight.toFixed(2) + ' kg' : i.totalUnits + ' ' + i.unit}</b></td>
+          <td>General</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">No hay productos.</td></tr>';
 
       document.getElementById('summaryModal').style.display = 'flex';
     }
 
-    function closeSummaryModal() {
-      document.getElementById('summaryModal').style.display = 'none';
-    }
+    function closeSummaryModal() { document.getElementById('summaryModal').style.display = 'none'; }
 
     async function toggleOrderStatus(orderId, newStatus) {
-      const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
-      if (error) {
-        showNotice('Error al actualizar el estado: ' + error.message);
-        return;
-      }
+      await db.from('orders').update({ status: newStatus }).eq('id', orderId);
       showNotice(`Pedido marcado como ${newStatus}`);
-      await loadOrders();
-      if (document.getElementById('accountingView').classList.contains('active')) {
-        calculateAccounting();
-      }
+      loadOrders();
     }
 
     function calculateOrderTotal(order) {
-      if (!order.order_items || order.order_items.length === 0) return 0;
+      if (!order.order_items) return 0;
       return order.order_items.reduce((sum, item) => {
-        let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
-        const unitPrice = item.unit_price || (catalogProd ? catalogProd.price_per_kg : 0);
-        const saleUnit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'kg');
+        const catProd = allProducts.find(p => p.name.trim().toLowerCase() === (item.product_name || '').trim().toLowerCase());
+        const unitPrice = item.unit_price || (catProd ? catProd.price_per_kg : 0);
+        const saleUnit = item.sale_unit || (catProd ? catProd.sale_unit : 'kg');
+        const weight = item.weight_quantity ?? item.quantity ?? 1;
         const units = item.units_quantity || 1;
-        
-        let weight = 1;
-        if (item.weight_quantity !== undefined && item.weight_quantity !== null && item.weight_quantity > 0) {
-          weight = item.weight_quantity;
-        } else if (item.quantity !== undefined && item.quantity !== null && item.quantity > 0) {
-          weight = item.quantity;
-        }
-
-        const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
-        return sum + (isWeightBased ? (weight * unitPrice) : (units * unitPrice));
+        return sum + (['kg', 'unidad_peso', '1g'].includes(saleUnit) ? (weight * unitPrice) : (units * unitPrice));
       }, 0);
     }
 
@@ -1377,30 +1186,23 @@
         document.getElementById('storeRent').value = c.storeRent || 0;
         document.getElementById('storeElectric').value = c.storeElectric || 0;
       }
-      
-      const savedSales = localStorage.getItem('buenasraices_store_sales');
-      if (savedSales) {
-        storeDailySales = JSON.parse(savedSales);
-      }
+      storeDailySales = JSON.parse(localStorage.getItem('buenasraices_store_sales') || '[]');
       renderStoreSalesTable();
     }
 
     function addStoreDailySale() {
       const dateVal = document.getElementById('storeSaleDate').value;
       const amountVal = parseFloat(document.getElementById('storeSaleAmount').value);
-
       if (!dateVal || isNaN(amountVal) || amountVal <= 0) {
-        alert('Por favor ingrese una fecha y un monto válido.');
+        alert('Ingrese una fecha y un monto válido.');
         return;
       }
-
       storeDailySales.push({ id: Date.now(), date: dateVal, amount: amountVal });
       localStorage.setItem('buenasraices_store_sales', JSON.stringify(storeDailySales));
-      
       document.getElementById('storeSaleAmount').value = '';
       renderStoreSalesTable();
       calculateAccounting();
-      showNotice('Venta diaria registrada con éxito');
+      showNotice('Venta registrada con éxito');
     }
 
     function deleteStoreSale(id) {
@@ -1414,15 +1216,14 @@
       const tbody = document.getElementById('storeSalesTableBody');
       if (!tbody) return;
       if (!storeDailySales.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias registradas para la tienda física.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--muted);">No hay ventas diarias en la tienda.</td></tr>';
         return;
       }
-
       tbody.innerHTML = storeDailySales.sort((a,b) => new Date(b.date) - new Date(a.date)).map(s => `
         <tr>
           <td><b>${new Date(s.date + 'T00:00:00').toLocaleDateString('es-AR')}</b></td>
           <td><b style="color: var(--leaf);">${money(s.amount)}</b></td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteStoreSale(${s.id})">✕ Eliminar</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteStoreSale(${s.id})">✕</button></td>
         </tr>
       `).join('');
     }
@@ -1430,57 +1231,38 @@
     function calculateAccounting() {
       const period = document.getElementById('accPeriod').value;
       const now = new Date();
-
-      let startDate = new Date();
-      let endDate = new Date(8640000000000000); // Fecha muy lejana por defecto (futuro)
-      let weeksFactor = 1;
+      let startDate = new Date(), endDate = new Date(8640000000000000), weeksFactor = 1;
 
       if (period === 'week') {
         const day = now.getDay();
-        const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
-        startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + (day === 0 ? -6 : 1));
         startDate.setHours(0, 0, 0, 0);
-        weeksFactor = 1;
-        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente a la Semana Actual';
       } else if (period === 'month') {
-        // CICLO DEL 5 AL 5
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-        const currentDay = now.getDate();
-
-        if (currentDay >= 5) {
-          // Del 5 de este mes al 5 del mes próximo
-          startDate = new Date(currentYear, currentMonth, 5, 0, 0, 0, 0);
-          endDate = new Date(currentYear, currentMonth + 1, 5, 23, 59, 59, 999);
+        const curY = now.getFullYear(), curM = now.getMonth(), curD = now.getDate();
+        if (curD >= 5) {
+          startDate = new Date(curY, curM, 5, 0, 0, 0, 0);
+          endDate = new Date(curY, curM + 1, 5, 23, 59, 59, 999);
         } else {
-          // Del 5 del mes pasado al 5 de este mes
-          startDate = new Date(currentYear, currentMonth - 1, 5, 0, 0, 0, 0);
-          endDate = new Date(currentYear, currentMonth, 5, 23, 59, 59, 999);
+          startDate = new Date(curY, curM - 1, 5, 0, 0, 0, 0);
+          endDate = new Date(curY, curM, 5, 23, 59, 59, 999);
         }
-
         weeksFactor = 4.33;
-        document.getElementById('statPeriodText').textContent = 'Cálculo correspondiente al ciclo (del 5 al 5)';
-      } else if (period === 'quarter') {
+      } else {
         startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-        startDate.setHours(0, 0, 0, 0);
         weeksFactor = 13;
-        document.getElementById('statPeriodText').textContent = 'Cálculo acumulado del Trimestre (13 semanas)';
       }
 
-      let deliverySales = 0;
-      let deliveredCount = 0;
+      let deliverySales = 0, deliveredCount = 0;
       const deliveredOrders = [];
 
       rawOrders.forEach(order => {
-        const orderTotal = calculateOrderTotal(order);
-        const isDelivered = order.status === 'Entregado';
-        const orderDate = new Date(order.created_at || Date.now());
-
-        if (isDelivered) {
+        if (order.status === 'Entregado') {
+          const orderDate = new Date(order.created_at || Date.now());
           if (orderDate >= startDate && orderDate <= endDate) {
-            deliverySales += orderTotal;
+            const computedTotal = calculateOrderTotal(order);
+            deliverySales += computedTotal;
             deliveredCount++;
-            deliveredOrders.push({ ...order, computedTotal: orderTotal });
+            deliveredOrders.push({ ...order, computedTotal });
           }
         }
       });
@@ -1488,24 +1270,16 @@
       let storeSalesTotal = 0;
       storeDailySales.forEach(s => {
         const sDate = new Date(s.date + 'T00:00:00');
-        if (sDate >= startDate && sDate <= endDate) {
-          storeSalesTotal += s.amount;
-        }
+        if (sDate >= startDate && sDate <= endDate) storeSalesTotal += s.amount;
       });
 
-      const driverDaily = parseFloat(document.getElementById('driverDaily').value) || 0;
-      const driverDays = parseFloat(document.getElementById('driverDays').value) || 0;
-      const girl1 = parseFloat(document.getElementById('girl1Weekly').value) || 0;
-      const girl2 = parseFloat(document.getElementById('girl2Weekly').value) || 0;
-      const girl3Monthly = parseFloat(document.getElementById('girl3Monthly').value) || 0;
+      const weeklyPayroll = ((parseFloat(document.getElementById('driverDaily').value) || 0) * (parseFloat(document.getElementById('driverDays').value) || 0)) + 
+                            (parseFloat(document.getElementById('girl1Weekly').value) || 0) + 
+                            (parseFloat(document.getElementById('girl2Weekly').value) || 0) + 
+                            ((parseFloat(document.getElementById('girl3Monthly').value) || 0) / 4.33);
       
-      const rent = parseFloat(document.getElementById('storeRent').value) || 0;
-      const electric = parseFloat(document.getElementById('storeElectric').value) || 0;
-
-      const weeklyPayroll = (driverDaily * driverDays) + girl1 + girl2 + (girl3Monthly / 4.33);
-      const weeklyFixedCosts = (rent + electric) / 4.33;
-
-      const totalExpenses = (weeklyPayroll + weeklyFixedCosts) * weeksFactor;
+      const weeklyFixed = ((parseFloat(document.getElementById('storeRent').value) || 0) + (parseFloat(document.getElementById('storeElectric').value) || 0)) / 4.33;
+      const totalExpenses = (weeklyPayroll + weeklyFixed) * weeksFactor;
       const grossIncome = deliverySales + storeSalesTotal;
       const netProfit = grossIncome - totalExpenses;
 
@@ -1519,13 +1293,7 @@
       netElem.textContent = money(netProfit);
       netElem.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
-      const tbody = document.getElementById('accountingTableBody');
-      if (!deliveredOrders.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados en este período.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = deliveredOrders.map(o => `
+      document.getElementById('accountingTableBody').innerHTML = deliveredOrders.length ? deliveredOrders.map(o => `
         <tr>
           <td><b>#${o.id}</b></td>
           <td>${new Date(o.created_at).toLocaleDateString('es-AR')}</td>
@@ -1534,92 +1302,64 @@
           <td><b style="color: var(--leaf);">${money(o.computedTotal)}</b></td>
           <td><span class="badge-status badge-delivered">Entregado</span></td>
         </tr>
-      `).join('');
+      `).join('') : '<tr><td colspan="6" style="text-align: center; color: var(--muted);">No hay pedidos entregados en este período.</td></tr>';
     }
+
     async function updateItemValues(itemId, orderId, newUnits, newWeight, unitPrice, saleUnit) {
-      let units = parseFloat(newUnits);
-      let weight = parseFloat(newWeight);
+      const units = Math.max(1, parseInt(newUnits) || 1);
+      const weight = Math.max(0, parseFloat(newWeight) || 0);
+      const isWeightBased = ['kg', 'unidad_peso', '1g'].includes(saleUnit);
 
-      if (isNaN(units) || units < 1) units = 1;
-      if (isNaN(weight) || weight < 0) weight = 0;
-
-      const isWeightBased = saleUnit === 'kg' || saleUnit === 'unidad_peso' || saleUnit === '1g';
-      const quantity = isWeightBased ? weight : units;
-
-      const { error } = await db.from('order_items').update({
+      await db.from('order_items').update({
         units_quantity: units,
         weight_quantity: weight,
-        quantity: quantity
+        quantity: isWeightBased ? weight : units
       }).eq('id', itemId);
 
-      if (error) {
-        showNotice('Error al actualizar ítem: ' + error.message);
-      } else {
-        showNotice('¡Ítem actualizado!');
-        loadOrders();
-      }
+      showNotice('¡Ítem actualizado!');
+      loadOrders();
     }
 
-    async function deleteOrderItem(itemId, orderId) {
-      if (!confirm('¿Eliminar este ítem del pedido?')) return;
+    async function deleteOrderItem(itemId) {
+      if (!confirm('¿Eliminar este ítem?')) return;
       await db.from('order_items').delete().eq('id', itemId);
       showNotice('Ítem eliminado');
       loadOrders();
     }
 
     async function deleteFullOrder(orderId) {
-      if (!confirm(`¿Estás seguro de eliminar el pedido #${orderId} por completo?`)) return;
+      if (!confirm(`¿Eliminar el pedido #${orderId} por completo?`)) return;
       await db.from('order_items').delete().eq('order_id', orderId);
       await db.from('orders').delete().eq('id', orderId);
-      showNotice('Pedido eliminado por completo');
+      showNotice('Pedido eliminado');
       loadOrders();
     }
 
     function openAddItemModal(orderId) {
       document.getElementById('modalOrderId').value = orderId;
-      const select = document.getElementById('modalProductSelect');
-      select.innerHTML = allProducts.map(p => `<option value="${p.id}">${p.name} (${money(p.price_per_kg)} / ${p.sale_unit || 'kg'})</option>`).join('');
+      document.getElementById('modalProductSelect').innerHTML = allProducts.map(p => `<option value="${p.id}">${p.name} (${money(p.price_per_kg)} / ${p.sale_unit || 'kg'})</option>`).join('');
       onModalProductChange();
       document.getElementById('addItemModal').style.display = 'flex';
     }
 
-    function closeAddItemModal() {
-      document.getElementById('addItemModal').style.display = 'none';
-    }
+    function closeAddItemModal() { document.getElementById('addItemModal').style.display = 'none'; }
 
     function onModalProductChange() {
-      const prodId = document.getElementById('modalProductSelect').value;
-      const prod = allProducts.find(p => p.id === prodId);
-      if (prod) {
-        document.getElementById('modalUnitPrice').value = prod.price_per_kg;
-      }
+      const prod = allProducts.find(p => p.id === document.getElementById('modalProductSelect').value);
+      if (prod) document.getElementById('modalUnitPrice').value = prod.price_per_kg;
     }
 
-async function saveNewOrderItem() {
-      const orderId = document.getElementById('modalOrderId').value;
-      const prodId = document.getElementById('modalProductSelect').value;
-      const prod = allProducts.find(p => p.id === prodId);
+    async function saveNewOrderItem() {
+      const prod = allProducts.find(p => p.id === document.getElementById('modalProductSelect').value);
       if (!prod) return;
 
       const unitPrice = parseFloat(document.getElementById('modalUnitPrice').value) || prod.price_per_kg;
       const units = parseInt(document.getElementById('modalUnits').value, 10) || 1;
       const weight = parseFloat(document.getElementById('modalWeight').value) || 1;
+      const isWeightBased = ['kg', 'unidad_peso', '1g'].includes(prod.sale_unit);
 
-      const isWeightBased = prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso' || prod.sale_unit === '1g';
-      const quantity = isWeightBased ? weight : units;
-
-      // Si la unidad es en gramos o necesitamos calcular gramos aproximados
-      let gramsValue = 0;
-      if (prod.sale_unit === '1g') {
-        gramsValue = weight;
-      } else if (prod.sale_unit === 'kg' || prod.sale_unit === 'unidad_peso') {
-        gramsValue = weight * 1000; // Convertimos kilos a gramos por seguridad
-      } else {
-        gramsValue = units * 100; // Valor estimativo por unidad si aplica
-      }
-
-      const payload = {
-        order_id: orderId,
+      await db.from('order_items').insert({
+        order_id: document.getElementById('modalOrderId').value,
         product_id: prod.id,
         product_name: prod.name,
         category: prod.category,
@@ -1628,25 +1368,18 @@ async function saveNewOrderItem() {
         sale_unit: prod.sale_unit || 'kg',
         units_quantity: units,
         weight_quantity: weight,
-        quantity: parseFloat(quantity),
-        grams: parseFloat(gramsValue) // <-- ¡Agregado para cumplir con la columna obligatoria!
-      };
+        quantity: isWeightBased ? weight : units,
+        grams: prod.sale_unit === '1g' ? weight : (isWeightBased ? weight * 1000 : units * 100)
+      });
 
-      const { error } = await db.from('order_items').insert(payload);
-      if (error) {
-        showNotice('Error al agregar ítem: ' + error.message);
-      } else {
-        showNotice('¡Ítem agregado con éxito!');
-        closeAddItemModal();
-        loadOrders();
-      }
+      showNotice('¡Ítem agregado!');
+      closeAddItemModal();
+      loadOrders();
     }
+
     function printReport(mode, zone) {
-      if (mode === 'delivery') {
-        document.body.classList.add('is-delivery-mode');
-      } else {
-        document.body.classList.remove('is-delivery-mode');
-      }
+      if (mode === 'delivery') document.body.classList.add('is-delivery-mode');
+      else document.body.classList.remove('is-delivery-mode');
 
       const zoneFilterSelect = document.getElementById('zoneFilter');
       if (zoneFilterSelect) {
