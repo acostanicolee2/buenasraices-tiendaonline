@@ -1256,19 +1256,112 @@
       `;
     }
 
+    let currentSummaryZone = 'ALL';
+
     async function openSummaryModal(zone) {
-      let filtered = rawOrders;
-      const title = document.getElementById('summaryModalTitle');
+      currentSummaryZone = zone;
       
-      if (zone !== 'ALL') {
-        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
-        title.textContent = `📋 Resumen de Armado - Zona: ${zone}`;
-      } else {
-        title.textContent = `📋 Resumen de Armado General (Todas las Zonas)`;
+      // Poblar el selector de semanas dinámicamente basado en las fechas de los pedidos
+      populateSummaryWeeksSelect();
+
+      document.getElementById('summaryModalTitle').textContent = `📋 Resumen de Armado - ${zone === 'ALL' ? 'General' : zone}`;
+      document.getElementById('summaryModal').style.display = 'flex';
+      
+      await generateSummaryData();
+    }
+
+    function populateSummaryWeeksSelect() {
+      const select = document.getElementById('summaryWeekSelect');
+      if (!select) return;
+
+      // Obtener semanas únicas de los pedidos (formato Año-Semana)
+      const weeksSet = new Set();
+      rawOrders.forEach(o => {
+        if (o.created_at) {
+          const d = new Date(o.created_at);
+          // Calcular número de semana del año aprox o usar año-mes-semana
+          const year = d.getFullYear();
+          const firstDayOfYear = new Date(year, 0, 1);
+          const weekNum = Math.ceil((((d - firstDayOfYear) / 86400000) + firstDayOfYear.getDay() + 1) / 7);
+          weeksSet.add(`${year}-W${String(weekNum).padStart(2, '0')}`);
+        }
+      });
+
+      const sortedWeeks = [...weeksSet].sort().reverse();
+
+      select.innerHTML = '<option value="ALL">Todas las semanas (Total actual)</option>' + 
+        sortedWeeks.map(w => `<option value="${w}">Semana ${w.split('-W')[1]} de ${w.split('-W')[0]}</option>`).join('');
+      
+      select.value = 'ALL';
+    }
+
+    async function refreshSummaryModal() {
+      await generateSummaryData();
+    }
+
+    async function generateSummaryData() {
+      const zone = currentSummaryZone;
+      const selectedWeek = document.getElementById('summaryWeekSelect')?.value || 'ALL';
+
+      // Filtrar por zona y opcionalmente por semana
+      let filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
+      
+      // Excluir los ya entregados si solo quieres armar pendientes (puedes ajustarlo si prefieres incluir todos)
+      filtered = filtered.filter(o => (o.status || '').trim() !== 'Entregado');
+
+      if (selectedWeek !== 'ALL') {
+        filtered = filtered.filter(o => {
+          if (!o.created_at) return false;
+          const d = new Date(o.created_at);
+          const year = d.getFullYear();
+          const firstDayOfYear = new Date(year, 0, 1);
+          const weekNum = Math.ceil((((d - firstDayOfYear) / 86400000) + firstDayOfYear.getDay() + 1) / 7);
+          const wStr = `${year}-W${String(weekNum).padStart(2, '0')}`;
+          return wStr === selectedWeek;
+        });
+      }
+      
+      const summary = {};
+      const addSummary = (name, totalUnits, totalWeight, unit) => {
+        if (!summary[name]) summary[name] = { name, totalUnits: 0, totalWeight: 0, unit };
+        summary[name].totalUnits += totalUnits;
+        summary[name].totalWeight += totalWeight;
+      };
+
+      for (const order of filtered) {
+        if (!order.order_items) continue;
+        for (const item of order.order_items) {
+          const catProd = allProducts.find(p => p.name.trim().toLowerCase() === item.product_name.trim().toLowerCase());
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity ?? item.quantity ?? 1;
+
+          if (catProd && (catProd.category || '').toLowerCase() === 'combos') {
+            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catProd.id);
+            if (comboComponents?.length) {
+              comboComponents.forEach(comp => {
+                const cProd = allProducts.find(p => p.id === comp.component_product_id);
+                if (cProd) addSummary(cProd.name, Number(comp.quantity) * units, Number(comp.quantity) * weight, comp.unit_type || 'kg');
+              });
+            } else {
+              addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
+            }
+          } else {
+            addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
+          }
+        }
       }
 
-      const summary = {};
+      document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
+        <tr>
+          <td><b>${i.name}</b></td>
+          <td><b style="font-size: 16px; color: var(--leaf);">${['kg', 'unidad_peso', '1g'].includes(i.unit) ? i.totalWeight.toFixed(2) + ' kg' : i.totalUnits + ' ' + i.unit}</b></td>
+        </tr>
+      `).join('') || '<tr><td colspan="2" style="text-align:center; color: var(--muted);">No hay productos para esta selección.</td></tr>';
+    }
 
+    function closeSummaryModal() { 
+      document.getElementById('summaryModal').style.display = 'none'; 
+    }
       function addStoSummary(name, totalUnits, totalWeight, unit) {
         const key = name.trim();
         if (!summary[key]) {
