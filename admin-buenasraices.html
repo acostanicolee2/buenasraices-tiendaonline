@@ -1387,75 +1387,7 @@
       `).join('') || '<tr><td colspan="2" style="text-align:center; color: var(--muted);">No hay productos para esta selección.</td></tr>';
     }
   
-    function closeSummaryModal() { 
-      document.getElementById('summaryModal').style.display = 'none'; 
-    }
-      function addStoSummary(name, totalUnits, totalWeight, unit) {
-        const key = name.trim();
-        if (!summary[key]) {
-          summary[key] = { name: key, totalUnits: 0, totalWeight: 0, unit: unit, ordersCount: 0 };
-        }
-        summary[key].totalUnits += totalUnits;
-        summary[key].totalWeight += totalWeight;
-        summary[key].ordersCount += 1;
-      }
-
-      for (const order of filtered) {
-        if (!order.order_items) continue;
-        
-        for (const item of order.order_items) {
-          const productName = item.product_name.trim();
-          let catalogProd = allProducts.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
-          
-          const units = item.units_quantity || 1;
-          const weight = item.weight_quantity !== undefined && item.weight_quantity !== null ? item.weight_quantity : (item.quantity || 1);
-          const unit = item.sale_unit || (catalogProd ? catalogProd.sale_unit : 'unidades');
-
-          if (catalogProd && (catalogProd.category || '').toLowerCase() === 'combos') {
-            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catalogProd.id);
-            
-            if (comboComponents && comboComponents.length > 0) {
-              comboComponents.forEach(comp => {
-                const compProduct = allProducts.find(p => p.id === comp.component_product_id);
-                if (compProduct) {
-                  const compUnits = Number(comp.quantity) * units;
-                  const compWeight = Number(comp.quantity) * weight;
-                  addStoSummary(compProduct.name, compUnits, compWeight, comp.unit_type || compProduct.sale_unit || 'kg');
-                }
-              });
-            } else {
-              addStoSummary(productName, units, weight, unit);
-            }
-          } else {
-            addStoSummary(productName, units, weight, unit);
-          }
-        }
-      }
-
-      const tbody = document.getElementById('summaryTableBody');
-      const items = Object.values(summary);
-
-      if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay productos para mostrar en este resumen.</td></tr>';
-      } else {
-        tbody.innerHTML = items.map(i => {
-          let qtyText = '';
-          if (i.unit === 'kg' || i.unit === 'unidad_peso' || i.unit === '1g') {
-            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalWeight.toFixed(2)} kg</b> (${i.totalUnits} un.)`;
-          } else {
-            qtyText = `<b style="font-size: 16px; color: var(--leaf);">${i.totalUnits} ${i.unit}</b>`;
-          }
-
-          return `
-            <tr>
-              <td><b>${i.name}</b></td>
-              <td>${qtyText}</td>
-              <td>Pedidos generales</td>
-            </tr>
-          `;
-        }).join('');
-      }
-
+ 
   
     async function toggleOrderStatus(orderId, newStatus) {
       const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
