@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel de Control · Buenas Raíces</title>
@@ -1656,4 +1657,12 @@ async function saveNewOrderItem() {
 
       setTimeout(() => {
         window.print();
-        docum
+        document.body.classList.remove('is-delivery-mode');
+      }, 300);
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
+</head>
