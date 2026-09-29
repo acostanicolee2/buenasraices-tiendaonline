@@ -1302,15 +1302,93 @@
     async function generateSummaryData() {
       const zone = currentSummaryZone;
       const selectedWeek = document.getElementById('summaryWeekSelect')?.value || 'ALL';
+     // Función auxiliar para formatear cantidades de forma exacta y legible
+    function formatExactSummaryQuantity(totalWeight, totalUnits, unit) {
+      const u = (unit || '').toLowerCase().trim();
 
-    document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
+      if (u === 'unidad' || u === 'unidades' || u === 'docena') {
+        return `${Math.round(totalUnits)} ${u}`;
+      }
+
+      if (u === '1g') {
+        return `${Math.round(totalWeight)}g`;
+      }
+
+      if (u === 'kg' || u === 'unidad_peso') {
+        if (totalWeight < 1 && totalWeight > 0) {
+          const gramos = Math.round(totalWeight * 1000);
+          return `${gramos}g`;
+        }
+        return `${totalWeight.toFixed(3).replace(/\.?0+$/, '').replace('.', ',')} kg`;
+      }
+
+      if (totalWeight >= 1) {
+        return `${totalWeight.toFixed(2).replace('.', ',')} kg`;
+      } else {
+        return `${Math.round(totalWeight * 1000)}g`;
+      }
+    }
+
+    // Función principal que genera los datos del resumen
+    async function generateSummaryData() {
+      const zone = currentSummaryZone;
+      const selectedWeek = document.getElementById('summaryWeekSelect')?.value || 'ALL';
+
+      let filtered = zone === 'ALL' ? rawOrders : rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === zone);
+      
+      // Excluir entregados (opcional, podés quitarlo si querés incluir entregados también)
+      filtered = filtered.filter(o => (o.status || '').trim() !== 'Entregado');
+
+      if (selectedWeek !== 'ALL') {
+        filtered = filtered.filter(o => {
+          if (!o.created_at) return false;
+          const d = new Date(o.created_at);
+          const year = d.getFullYear();
+          const firstDayOfYear = new Date(year, 0, 1);
+          const weekNum = Math.ceil((((d - firstDayOfYear) / 86400000) + firstDayOfYear.getDay() + 1) / 7);
+          const wStr = `${year}-W${String(weekNum).padStart(2, '0')}`;
+          return wStr === selectedWeek;
+        });
+      }
+      
+      const summary = {};
+      const addSummary = (name, totalUnits, totalWeight, unit) => {
+        if (!summary[name]) summary[name] = { name, totalUnits: 0, totalWeight: 0, unit };
+        summary[name].totalUnits += totalUnits;
+        summary[name].totalWeight += totalWeight;
+      };
+
+      for (const order of filtered) {
+        if (!order.order_items) continue;
+        for (const item of order.order_items) {
+          const catProd = allProducts.find(p => p.name.trim().toLowerCase() === item.product_name.trim().toLowerCase());
+          const units = item.units_quantity || 1;
+          const weight = item.weight_quantity ?? item.quantity ?? 1;
+
+          if (catProd && (catProd.category || '').toLowerCase() === 'combos') {
+            const { data: comboComponents } = await db.from('combo_items').select('*').eq('combo_product_id', catProd.id);
+            if (comboComponents?.length) {
+              comboComponents.forEach(comp => {
+                const cProd = allProducts.find(p => p.id === comp.component_product_id);
+                if (cProd) addSummary(cProd.name, Number(comp.quantity) * units, Number(comp.quantity) * weight, comp.unit_type || 'kg');
+              });
+            } else {
+              addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
+            }
+          } else {
+            addSummary(item.product_name, units, weight, item.sale_unit || 'unidades');
+          }
+        }
+      }
+
+      document.getElementById('summaryTableBody').innerHTML = Object.values(summary).map(i => `
         <tr>
           <td><b>${i.name}</b></td>
           <td><b style="font-size: 16px; color: var(--leaf);">${formatExactSummaryQuantity(i.totalWeight, i.totalUnits, i.unit)}</b></td>
         </tr>
       `).join('') || '<tr><td colspan="2" style="text-align:center; color: var(--muted);">No hay productos para esta selección.</td></tr>';
     }
-
+  
     function closeSummaryModal() { 
       document.getElementById('summaryModal').style.display = 'none'; 
     }
