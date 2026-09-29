@@ -1020,14 +1020,33 @@
       select.value = current;
     }
 
+    function setOrderFilter(status) {
+      currentOrderFilter = status;
+      const btnPending = document.getElementById('tabPending');
+      const btnHistory = document.getElementById('tabHistory');
+      
+      if (status === 'Pendiente') {
+        btnPending.className = 'btn';
+        btnHistory.className = 'btn btn-secondary';
+      } else {
+        btnPending.className = 'btn btn-secondary';
+        btnHistory.className = 'btn';
+      }
+      filterOrdersByZone();
+    }
+
     function filterOrdersByZone() {
-      const select = document.getElementById('zoneFilter');
-      if (!select) return;
-      const selectedZone = select.value;
-      let filtered = rawOrders;
+      const selectedZone = document.getElementById('zoneFilter')?.value || 'ALL';
+      
+      // Filtrar por Estado (Pestaña activa) y Zona
+      let filtered = rawOrders.filter(order => {
+        const isDelivered = (order.status || '').trim() === 'Entregado';
+        const matchesStatus = currentOrderFilter === 'Entregado' ? isDelivered : !isDelivered;
+        return matchesStatus;
+      });
 
       if (selectedZone !== 'ALL') {
-        filtered = rawOrders.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
+        filtered = filtered.filter(o => (o.zone || o.city || 'Sin Zona').trim() === selectedZone);
       }
 
       renderOrdersGroupedByZone(filtered);
