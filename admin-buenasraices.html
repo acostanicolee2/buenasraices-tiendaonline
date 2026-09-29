@@ -1459,13 +1459,7 @@
         }).join('');
       }
 
-      document.getElementById('summaryModal').style.display = 'flex';
-    }
-
-    function closeSummaryModal() {
-      document.getElementById('summaryModal').style.display = 'none';
-    }
-
+  
     async function toggleOrderStatus(orderId, newStatus) {
       const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) {
