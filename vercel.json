@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://buenasraices.pesalo.com.ar/$1",
+      "permanent": true
+    }
+  ]
+}
